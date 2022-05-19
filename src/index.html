@@ -21,7 +21,7 @@
        gl_Position = modelViewMatrix * vec4(vPosition, 1.0);
     }
  </script>
- <script id="fragment-shader" type="x-shader/x-fragment">
+  <script id="fragment-shader" type="x-shader/x-fragment">
     precision mediump float;
 
     varying vec3 fColor;
@@ -43,76 +43,76 @@
     <div class="commands-container">
       <div class="commands">
         <div class="command add-primitive">
-            <h4>Adicionar Primitiva</h4>
-            <div class="container">
-              <select class="dropdown">
-                <option>Cubo</option>
-                <option>Pirâmide</option>
-              </select>
-            </div>
+          <h4>Adicionar Primitiva</h4>
           <div class="container">
-            <button class="btn primary">Carregar Textura</button>
-            <button class="btn primary">Adicionar Primitiva</button>
+            <select class="dropdown" name="primitives">
+              <option value="cube">Cubo</option>
+              <option value="pyramid">Pirâmide</option>
+            </select>
+          </div>
+          <div class="container">
+            <button class="btn primary" id="load-texture">Carregar Textura</button>
+            <button class="btn primary" id="add-primitive">Adicionar Primitiva</button>
           </div>
         </div>
         <div class="command add-model">
           <h4>Adicionar Modelo</h4>
           <div class="container">
-            <button class="btn primary">Carregar Modelo</button>
-            <button class="btn primary">Carregar Textura</button>
+            <button class="btn primary" id="load-model">Carregar Modelo</button>
+            <button class="btn primary" id="load-texture">Carregar Textura</button>
           </div>
         </div>
         <div class="command manipulate-object">
           <h4>Manipular Objeto</h4>
           <div class="container flex-column">
             Selecionar Objeto
-            <select class="dropdown">
-              <option>No available objects</option>
+            <select class="dropdown" id="select-objects">
+              <option selected disabled>Objeto</option>
             </select>
           </div>
           <div class="container">
-            Scalling X <input type="number" value="0" class="in"/>
+            Scaling X <input type="number" value="0" class="in" id="scale-x" />
           </div>
           <div class="container">
-            Scalling Z <input type="number" value="0" class="in"/>
+            Scaling Y <input type="number" value="0" class="in" id="scale-y" />
           </div>
           <div class="container">
-            Scalling Z <input type="number" value="0" class="in"/>
+            Scaling Z <input type="number" value="0" class="in" id="scale-z" />
           </div>
           <div class="container">
-            Translação X <input type="number" value="0" class="in"/>
+            Translação X <input type="number" value="0" class="in" id="translation-x" />
           </div>
           <div class="container">
-            Translação Y <input type="number" value="0" class="in"/>
+            Translação Y <input type="number" value="0" class="in" id="translation-y" />
           </div>
           <div class="container">
-            Translação Z <input type="number" value="0" class="in"/>
+            Translação Z <input type="number" value="0" class="in" id="translation-z" />
           </div>
           <div class="container flex-column">
-            <button class="btn primary">Carregar Textura</button>
-            <button class="btn primary">Aplicar Transformação</button>
-            <button class="btn delete">Remover</button>
+            <button class="btn primary" id="object-load-texture">Carregar Textura</button>
+            <button class="btn primary" id="object-apply-transformation">Aplicar Transformação</button>
+            <button class="btn delete" id="object-remove">Remover</button>
           </div>
         </div>
-        <div class="command select-objeto">
+        <div class="command">
           <div class="container flex-column">
             Selecionar Objeto
             <select class="dropdown">
-              <option>No available objects</option>
+              <option selected disabled>Objeto</option>
             </select>
           </div>
           <div class="container">
-            Rotação X <input type="number" value="0" class="in"/>
+            Rotação X <input type="number" value="0" class="in" id="rotate-x" />
           </div>
           <div class="container">
-            Rotação Y <input type="number" value="0" class="in"/>
+            Rotação Y <input type="number" value="0" class="in" id="rotate-y" />
           </div>
           <div class="container">
-            Rotação Z <input type="number" value="0" class="in"/>
+            Rotação Z <input type="number" value="0" class="in" id="rotate-z" />
           </div>
           <div class="container flex-column">
-            <button class="btn primary">Animar Objeto</button>
-            <button class="btn primary">Terminar Animação</button>
+            <button class="btn primary" id="object-animate">Animar Objeto</button>
+            <button class="btn primary" id="object-stop-animate">Terminar Animação</button>
           </div>
         </div>
         <div class="command light-source">
@@ -120,17 +120,17 @@
           <div class="container flex-column">
             Direção
             <div class="container">
-              X <input type="number" value="0" class="in"/>
-              Y <input type="number" value="0" class="in"/>
-              Z <input type="number" value="0" class="in"/>
+              X <input type="number" value="0" class="in" id="light-src-direction-x" />
+              Y <input type="number" value="0" class="in" id="light-src-direction-y" />
+              Z <input type="number" value="0" class="in" id="light-src-direction-z" />
             </div>
             Intensidade
             <div class="container">
-              R <input type="number" value="0" class="in"/>
-              G <input type="number" value="0" class="in"/>
-              B <input type="number" value="0" class="in"/>
+              R <input type="number" value="0" class="in" id="light-src-intensity-r" />
+              G <input type="number" value="0" class="in" id="light-src-intensity-g" />
+              B <input type="number" value="0" class="in" id="light-src-intensity-b" />
             </div>
-            <button class="btn primary">Adicionar</button>
+            <button class="btn primary" id="add-light-src">Adicionar</button>
           </div>
         </div>
       </div>
