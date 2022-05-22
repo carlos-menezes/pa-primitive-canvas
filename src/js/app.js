@@ -148,6 +148,15 @@ function handleObjectSelection() {
   translationInputs[1].value = object.translation.y;
   translationInputs[2].textContent = object.translation.z;
   translationInputs[2].value = object.translation.z;
+
+  // Rotation
+  const rotationInputs = document.querySelectorAll("input[id*='rotation-']");
+  rotationInputs[0].textContent = object.rotation.x;
+  rotationInputs[0].value = object.rotation.x;
+  rotationInputs[1].textContent = object.rotation.y;
+  rotationInputs[1].value = object.rotation.y;
+  rotationInputs[2].textContent = object.rotation.z;
+  rotationInputs[2].value = object.rotation.z;
 }
 
 const colorPyramid = () => {
