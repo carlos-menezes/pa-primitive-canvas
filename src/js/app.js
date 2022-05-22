@@ -50,25 +50,15 @@ let program;
  * @returns an object describing the features of the object
  */
 const createObject = (shape) => {
+  const initialTranslation = Math.floor(Math.random() * (8 - -8 + 1)) + -8;
+  const initialRotation = Math.random() * (0.1 - 0.01) + 0.01;
   return {
     shape,
     scale: 0.1,
-    translation: {
-      x: Math.floor(Math.random() * (8 - -8 + 1)) + -8,
-      y: Math.floor(Math.random() * (8 - -8 + 1)) + -8,
-      z: Math.floor(Math.random() * (8 - -8 + 1)) + -8,
-    },
-    rotation: {
-      // Rotation between (0.03, 0.1) rad
-      x: 0,
-      y: Math.random() * (0.1 - 0.01) + 0.01,
-      z: 0,
-    },
-    currentRotation: {
-      x: 0,
-      y: 0,
-      z: 0,
-    },
+    // [x,y,z]
+    translation: [initialTranslation, initialTranslation, initialTranslation],
+    rotation: [0, initialRotation, 0],
+    currentRotation: [0, 0, 0],
   };
 };
 
@@ -142,21 +132,19 @@ function handleObjectSelection() {
   const translationInputs = document.querySelectorAll(
     "input[id*='translation-']"
   );
-  translationInputs[0].textContent = object.translation.x;
-  translationInputs[0].value = object.translation.x;
-  translationInputs[1].textContent = object.translation.y;
-  translationInputs[1].value = object.translation.y;
-  translationInputs[2].textContent = object.translation.z;
-  translationInputs[2].value = object.translation.z;
+  translationInputs.forEach((input, idx) => {
+    input.textContent = object.translation[idx];
+    input.value = object.translation[idx];
+  });
 
   // Rotation
   const rotationInputs = document.querySelectorAll("input[id*='rotation-']");
-  rotationInputs[0].textContent = object.rotation.x;
-  rotationInputs[0].value = object.rotation.x;
-  rotationInputs[1].textContent = object.rotation.y;
-  rotationInputs[1].value = object.rotation.y;
-  rotationInputs[2].textContent = object.rotation.z;
-  rotationInputs[2].value = object.rotation.z;
+  rotationInputs.forEach((input, idx) => {
+    input.textContent = object.rotation[idx];
+    input.value = object.rotation[idx];
+  });
+
+  console.log(objects);
 }
 
 const colorPyramid = () => {
@@ -212,18 +200,18 @@ const preparePyramid = (pyramid) => {
   // *** Apply transformations ***
   mat4.scale(ctm, ctm, [pyramid.scale, pyramid.scale, pyramid.scale]);
   mat4.translate(ctm, ctm, [
-    pyramid.translation.x,
-    pyramid.translation.y,
-    pyramid.translation.z,
+    pyramid.translation[0],
+    pyramid.translation[1],
+    pyramid.translation[2],
   ]);
 
   // *** Rotate cube (if necessary) ***
-  pyramid.currentRotation.x += pyramid.rotation.x;
-  pyramid.currentRotation.y += pyramid.rotation.y;
-  pyramid.currentRotation.z += pyramid.rotation.z;
-  mat4.rotateX(ctm, ctm, pyramid.currentRotation.x);
-  mat4.rotateY(ctm, ctm, pyramid.currentRotation.y);
-  mat4.rotateZ(ctm, ctm, pyramid.currentRotation.z);
+  pyramid.currentRotation[0] += pyramid.rotation[0];
+  pyramid.currentRotation[1] += pyramid.rotation[1];
+  pyramid.currentRotation[2] += pyramid.rotation[2];
+  mat4.rotateX(ctm, ctm, pyramid.currentRotation[0]);
+  mat4.rotateY(ctm, ctm, pyramid.currentRotation[1]);
+  mat4.rotateZ(ctm, ctm, pyramid.currentRotation[2]);
 
   // *** Transfer the information to the model viewer ***
   gl.uniformMatrix4fv(modelViewMatrix, false, ctm);
@@ -288,18 +276,18 @@ const prepareCube = (cube) => {
   // *** Apply transformations ***
   mat4.scale(ctm, ctm, [cube.scale, cube.scale, cube.scale]);
   mat4.translate(ctm, ctm, [
-    cube.translation.x,
-    cube.translation.y,
-    cube.translation.z,
+    cube.translation[0],
+    cube.translation[1],
+    cube.translation[2],
   ]);
 
   // *** Rotate cube (if necessary) ***
-  cube.currentRotation.x += cube.rotation.x;
-  cube.currentRotation.y += cube.rotation.y;
-  cube.currentRotation.z += cube.rotation.z;
-  mat4.rotateX(ctm, ctm, cube.currentRotation.x);
-  mat4.rotateY(ctm, ctm, cube.currentRotation.y);
-  mat4.rotateZ(ctm, ctm, cube.currentRotation.z);
+  cube.currentRotation[0] += cube.rotation[0];
+  cube.currentRotation[1] += cube.rotation[1];
+  cube.currentRotation[2] += cube.rotation[2];
+  mat4.rotateX(ctm, ctm, cube.currentRotation[0]);
+  mat4.rotateY(ctm, ctm, cube.currentRotation[1]);
+  mat4.rotateZ(ctm, ctm, cube.currentRotation[2]);
 
   // *** Transfer the information to the model viewer ***
   gl.uniformMatrix4fv(modelViewMatrix, false, ctm);
