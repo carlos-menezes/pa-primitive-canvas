@@ -112,15 +112,42 @@ function init() {
       const shape = document.getElementById("select-primitive").value;
       const object = createObject(shape);
       objects.push(object);
-      let objectSelector = document.getElementById("select-objects");
+      let objectSelector = document.getElementById("select-object");
       const option = document.createElement("option");
       option.value = objects.length - 1; // The value of the "option" will be the index of the element
       option.innerText = `${shape} #${objects.length - 1}`;
       objectSelector.appendChild(option);
     });
 
+  document
+    .getElementById("select-object")
+    .addEventListener("change", handleObjectSelection);
+
   // *** Render ***
   render();
+}
+
+function handleObjectSelection() {
+  const selectObjectElement = document.getElementById("select-object");
+  const selectedObjectValue =
+    selectObjectElement.options[selectObjectElement.selectedIndex].value;
+  const object = objects[selectedObjectValue];
+
+  // Scaling
+  const scaleInput = document.querySelector("input[id='scale']");
+  scaleInput.textContent = object.scale;
+  scaleInput.value = object.scale;
+
+  // Translation
+  const translationInputs = document.querySelectorAll(
+    "input[id*='translation-']"
+  );
+  translationInputs[0].textContent = object.translation.x;
+  translationInputs[0].value = object.translation.x;
+  translationInputs[1].textContent = object.translation.y;
+  translationInputs[1].value = object.translation.y;
+  translationInputs[2].textContent = object.translation.z;
+  translationInputs[2].value = object.translation.z;
 }
 
 const colorPyramid = () => {
