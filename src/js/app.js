@@ -1,6 +1,21 @@
 let canvas;
 
-let cubePointsArray = [
+let objects = [];
+
+const pyramidPointsArray = [
+  // Front face
+  0.0, 1.0, 0.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
+  // Right face
+  0.0, 1.0, 0.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0,
+  // Back face
+  0.0, 1.0, 0.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0,
+  // Left face
+  0.0, 1.0, 0.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0,
+];
+
+let pyramidColorsArray = [];
+
+const cubePointsArray = [
   // Front
   0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5,
   -0.5, -0.5, 0.5,
@@ -21,8 +36,6 @@ let cubePointsArray = [
   -0.5, -0.5, -0.5, -0.5,
 ];
 let cubeColorsArray = [];
-
-let objects = [];
 
 let gl;
 let ctm;
@@ -49,7 +62,7 @@ const createObject = (shape) => {
       // Rotation between (0.03, 0.1) rad
       x: Math.random() * (0.1 - 0.01) + 0.01,
       y: Math.random() * (0.1 - 0.01) + 0.01,
-      z: Math.random() * (0.1 - 0.01) + 0.01,
+      z: 0,
     },
     currentRotation: {
       x: 0,
@@ -79,6 +92,7 @@ function init() {
   }
 
   colorCube();
+  colorPyramid();
 
   // *** Set viewport ***
   gl.viewport(0, 0, canvas.width, canvas.height);
@@ -103,6 +117,79 @@ function init() {
   // *** Render ***
   render();
 }
+
+const colorPyramid = () => {
+  const vertexColors = [
+    [1.0, 1.0, 0.0], // yellow
+    [0.0, 1.0, 0.0], // green
+    [0.0, 0.0, 1.0], // blue
+    [1.0, 0.0, 1.0], // magenta
+    [0.0, 1.0, 1.0], // cyan
+  ];
+
+  for (let face = 0; face < 5; face++) {
+    let faceColor = vertexColors[face];
+    for (let vertex = 0; vertex < 3; vertex++) {
+      pyramidColorsArray.push(...faceColor);
+    }
+  }
+};
+
+const preparePyramid = (pyramid) => {
+  // *** Send position data to the GPU ***
+  let vBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(pyramidPointsArray),
+    gl.STATIC_DRAW
+  );
+
+  // *** Define the form of the data ***
+  let vPosition = gl.getAttribLocation(program, "vPosition");
+  gl.enableVertexAttribArray(vPosition);
+  gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
+
+  // *** Send color data to the GPU ***
+  let cBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(pyramidColorsArray),
+    gl.STATIC_DRAW
+  );
+
+  // *** Define the color of the data ***
+  let vColor = gl.getAttribLocation(program, "vColor");
+  gl.enableVertexAttribArray(vColor);
+  gl.vertexAttribPointer(vColor, 3, gl.FLOAT, false, 0, 0);
+
+  // *** Get a pointer for the model viewer
+  modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
+  ctm = mat4.create();
+
+  // *** Apply transformations ***
+  mat4.scale(ctm, ctm, [pyramid.scale, pyramid.scale, pyramid.scale]);
+  mat4.translate(ctm, ctm, [
+    pyramid.translation.x,
+    pyramid.translation.y,
+    pyramid.translation.z,
+  ]);
+
+  // *** Rotate cube (if necessary) ***
+  pyramid.currentRotation.x += pyramid.rotation.x;
+  pyramid.currentRotation.y += pyramid.rotation.y;
+  pyramid.currentRotation.z += pyramid.rotation.z;
+  mat4.rotateX(ctm, ctm, pyramid.currentRotation.x);
+  mat4.rotateY(ctm, ctm, pyramid.currentRotation.y);
+  mat4.rotateZ(ctm, ctm, pyramid.currentRotation.z);
+
+  // *** Transfer the information to the model viewer ***
+  gl.uniformMatrix4fv(modelViewMatrix, false, ctm);
+
+  // *** Draw the triangles ***
+  gl.drawArrays(gl.TRIANGLES, 0, pyramidPointsArray.length / 3);
+};
 
 const colorCube = () => {
   // Specify the colors of the faces
@@ -190,6 +277,9 @@ function render() {
     switch (object.shape) {
       case "cube":
         prepareCube(object);
+        break;
+      case "pyramid":
+        preparePyramid(object);
         break;
       // TODO: preparePyramid
     }
