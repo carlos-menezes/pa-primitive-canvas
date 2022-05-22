@@ -60,7 +60,7 @@ const createObject = (shape) => {
     },
     rotation: {
       // Rotation between (0.03, 0.1) rad
-      x: Math.random() * (0.1 - 0.01) + 0.01,
+      x: 0,
       y: Math.random() * (0.1 - 0.01) + 0.01,
       z: 0,
     },
@@ -110,8 +110,13 @@ function init() {
     .getElementById("add-primitive")
     .addEventListener("click", function () {
       const shape = document.getElementById("select-primitive").value;
-      const cube = createObject(shape);
-      objects.push(cube);
+      const object = createObject(shape);
+      objects.push(object);
+      let objectSelector = document.getElementById("select-objects");
+      const option = document.createElement("option");
+      option.value = objects.length - 1; // The value of the "option" will be the index of the element
+      option.innerText = `${shape} #${objects.length - 1}`;
+      objectSelector.appendChild(option);
     });
 
   // *** Render ***
