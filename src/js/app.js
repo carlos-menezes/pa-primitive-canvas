@@ -50,14 +50,16 @@ let program;
  * @returns an object describing the features of the object
  */
 const createObject = (shape) => {
-  const initialTranslation = Math.floor(Math.random() * (8 - -8 + 1)) + -8;
-  const initialRotation = Math.random() * (0.1 - 0.01) + 0.01;
   return {
     shape,
     scale: 0.1,
     // [x,y,z]
-    translation: [initialTranslation, initialTranslation, initialTranslation],
-    rotation: [0, initialRotation, 0],
+    translation: [
+      Math.floor(Math.random() * (8 - -8 + 1)) + -8,
+      Math.floor(Math.random() * (8 - -8 + 1)) + -8,
+      Math.floor(Math.random() * (8 - -8 + 1)) + -8,
+    ],
+    rotation: [0, Math.random() * (0.1 - 0.01) + 0.01, 0],
     currentRotation: [0, 0, 0],
   };
 };
