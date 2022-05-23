@@ -184,13 +184,13 @@ const colorPyramid = () => {
   }
 };
 
-const preparePyramid = (pyramid) => {
+const prepareObject = (object, objectPointsArray, objectColorsArray) => {
   // *** Send position data to the GPU ***
   let vBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
   gl.bufferData(
     gl.ARRAY_BUFFER,
-    new Float32Array(pyramidPointsArray),
+    new Float32Array(objectPointsArray),
     gl.STATIC_DRAW
   );
 
@@ -204,7 +204,7 @@ const preparePyramid = (pyramid) => {
   gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
   gl.bufferData(
     gl.ARRAY_BUFFER,
-    new Float32Array(pyramidColorsArray),
+    new Float32Array(objectColorsArray),
     gl.STATIC_DRAW
   );
 
@@ -218,26 +218,26 @@ const preparePyramid = (pyramid) => {
   ctm = mat4.create();
 
   // *** Apply transformations ***
-  mat4.scale(ctm, ctm, [pyramid.scale, pyramid.scale, pyramid.scale]);
+  mat4.scale(ctm, ctm, [object.scale, object.scale, object.scale]);
   mat4.translate(ctm, ctm, [
-    pyramid.translation[0],
-    pyramid.translation[1],
-    pyramid.translation[2],
+    object.translation[0],
+    object.translation[1],
+    object.translation[2],
   ]);
 
   // *** Rotate cube (if necessary) ***
-  pyramid.currentRotation[0] += pyramid.rotation[0];
-  pyramid.currentRotation[1] += pyramid.rotation[1];
-  pyramid.currentRotation[2] += pyramid.rotation[2];
-  mat4.rotateX(ctm, ctm, pyramid.currentRotation[0]);
-  mat4.rotateY(ctm, ctm, pyramid.currentRotation[1]);
-  mat4.rotateZ(ctm, ctm, pyramid.currentRotation[2]);
+  object.currentRotation[0] += object.rotation[0];
+  object.currentRotation[1] += object.rotation[1];
+  object.currentRotation[2] += object.rotation[2];
+  mat4.rotateX(ctm, ctm, object.currentRotation[0]);
+  mat4.rotateY(ctm, ctm, object.currentRotation[1]);
+  mat4.rotateZ(ctm, ctm, object.currentRotation[2]);
 
   // *** Transfer the information to the model viewer ***
   gl.uniformMatrix4fv(modelViewMatrix, false, ctm);
 
   // *** Draw the triangles ***
-  gl.drawArrays(gl.TRIANGLES, 0, pyramidPointsArray.length / 3);
+  gl.drawArrays(gl.TRIANGLES, 0, objectPointsArray.length / 3);
 };
 
 const colorCube = () => {
@@ -260,62 +260,6 @@ const colorCube = () => {
   }
 };
 
-const prepareCube = (cube) => {
-  // *** Send position data to the GPU ***
-  let vBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-  gl.bufferData(
-    gl.ARRAY_BUFFER,
-    new Float32Array(cubePointsArray),
-    gl.STATIC_DRAW
-  );
-
-  // *** Define the form of the data ***
-  let vPosition = gl.getAttribLocation(program, "vPosition");
-  gl.enableVertexAttribArray(vPosition);
-  gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
-
-  // *** Send color data to the GPU ***
-  let cBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-  gl.bufferData(
-    gl.ARRAY_BUFFER,
-    new Float32Array(cubeColorsArray),
-    gl.STATIC_DRAW
-  );
-
-  // *** Define the color of the data ***
-  let vColor = gl.getAttribLocation(program, "vColor");
-  gl.enableVertexAttribArray(vColor);
-  gl.vertexAttribPointer(vColor, 3, gl.FLOAT, false, 0, 0);
-
-  // *** Get a pointer for the model viewer
-  modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
-  ctm = mat4.create();
-
-  // *** Apply transformations ***
-  mat4.scale(ctm, ctm, [cube.scale, cube.scale, cube.scale]);
-  mat4.translate(ctm, ctm, [
-    cube.translation[0],
-    cube.translation[1],
-    cube.translation[2],
-  ]);
-
-  // *** Rotate cube (if necessary) ***
-  cube.currentRotation[0] += cube.rotation[0];
-  cube.currentRotation[1] += cube.rotation[1];
-  cube.currentRotation[2] += cube.rotation[2];
-  mat4.rotateX(ctm, ctm, cube.currentRotation[0]);
-  mat4.rotateY(ctm, ctm, cube.currentRotation[1]);
-  mat4.rotateZ(ctm, ctm, cube.currentRotation[2]);
-
-  // *** Transfer the information to the model viewer ***
-  gl.uniformMatrix4fv(modelViewMatrix, false, ctm);
-
-  // *** Draw the triangles ***
-  gl.drawArrays(gl.TRIANGLES, 0, cubePointsArray.length / 3);
-};
-
 /**
  * Functions that renders all the elements into the canvas
  */
@@ -325,12 +269,11 @@ function render() {
   for (const object of objects) {
     switch (object.shape) {
       case "cube":
-        prepareCube(object);
+        prepareObject(object, cubePointsArray, cubeColorsArray);
         break;
       case "pyramid":
-        preparePyramid(object);
+        prepareObject(object, pyramidPointsArray, pyramidColorsArray);
         break;
-      // TODO: preparePyramid
     }
   }
   // Make the new frame
