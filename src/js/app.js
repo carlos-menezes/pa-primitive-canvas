@@ -100,23 +100,41 @@ function init() {
 
   document
     .getElementById("add-primitive")
-    .addEventListener("click", function () {
-      const shape = document.getElementById("select-primitive").value;
-      const object = createObject(shape);
-      objects.push(object);
-      let objectSelector = document.getElementById("select-object");
-      const option = document.createElement("option");
-      option.value = objects.length - 1; // The value of the "option" will be the index of the element
-      option.innerText = `${shape} #${objects.length - 1}`;
-      objectSelector.appendChild(option);
-    });
+    .addEventListener("click", handleAddPrimitive);
 
   document
     .getElementById("select-object")
     .addEventListener("change", handleObjectSelection);
 
+  document
+    .getElementById("object-remove")
+    .addEventListener("click", handleRemoveObject);
+
   // *** Render ***
   render();
+}
+
+function handleRemoveObject() {
+  const selectObjectElement = document.getElementById("select-object");
+  const selectedObjectValue =
+    selectObjectElement.options[selectObjectElement.selectedIndex].value;
+  objects.splice(selectedObjectValue - 1 ?? 0, 1);
+
+  const childToRemove = document.querySelector(
+    `option[value='${selectedObjectValue}']`
+  );
+  selectObjectElement.removeChild(childToRemove);
+}
+
+function handleAddPrimitive() {
+  const shape = document.getElementById("select-primitive").value;
+  const object = createObject(shape);
+  objects.push(object);
+  let objectSelector = document.getElementById("select-object");
+  const option = document.createElement("option");
+  option.value = objects.length - 1; // The value of the "option" will be the index of the element
+  option.innerText = `${shape} #${objects.length - 1}`;
+  objectSelector.appendChild(option);
 }
 
 function handleObjectSelection() {
