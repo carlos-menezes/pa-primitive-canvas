@@ -1,145 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles/index.css" />
+    <title>pa-primitive-canvas &middot; Grupo I</title>
+    <script id="vertex-shader" type="x-shader/x-vertex">
+      precision mediump float;
 
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles/index.css">
-  <title>pa-primitive-canvas &middot; Grupo I</title>
-  <script id="vertex-shader" type="x-shader/x-vertex">
-    precision mediump float;
+      attribute vec3 vPosition;
+      attribute vec3 vColor;
+      varying vec3 fColor;
 
-    attribute vec3 vPosition;
-    attribute vec3 vColor;
-    varying vec3 fColor;
+      uniform mat4 modelViewMatrix;
 
-    uniform mat4 modelViewMatrix;
+      void main() {
+         fColor = vColor;
+         gl_Position = modelViewMatrix * vec4(vPosition, 1.0);
+      }
+    </script>
+    <script id="fragment-shader" type="x-shader/x-fragment">
+      precision mediump float;
 
-    void main() {
-       fColor = vColor;
-       gl_Position = modelViewMatrix * vec4(vPosition, 1.0);
-    }
- </script>
-  <script id="fragment-shader" type="x-shader/x-fragment">
-    precision mediump float;
+      varying vec3 fColor;
 
-    varying vec3 fColor;
+      void main()
+      {
+        gl_FragColor = vec4(fColor, 1.0);
+      }
+    </script>
+  </head>
 
-    void main()
-    {
-      gl_FragColor = vec4(fColor, 1.0);
-    }
- </script>
-</head>
-
-<body>
-  <main>
-    <div class="canvas-container">
-      <canvas id="gl-canvas">
-        Sorry, but your browser does not support HTML5's canvas element.
-      </canvas>
-    </div>
-    <div class="commands-container">
-      <div class="commands">
-        <div class="command add-primitive">
-          <h4>Adicionar Primitiva</h4>
-          <div class="container">
-            <select class="dropdown" name="primitives">
-              <option value="cube">Cubo</option>
-              <option value="pyramid">Pirâmide</option>
-            </select>
-          </div>
-          <div class="container">
-            <button class="btn primary" id="load-texture">Carregar Textura</button>
-            <button class="btn primary" id="add-primitive">Adicionar Primitiva</button>
-          </div>
-        </div>
-        <div class="command add-model">
-          <h4>Adicionar Modelo</h4>
-          <div class="container">
-            <button class="btn primary" id="load-model">Carregar Modelo</button>
-            <button class="btn primary" id="load-texture">Carregar Textura</button>
-          </div>
-        </div>
-        <div class="command manipulate-object">
-          <h4>Manipular Objeto</h4>
-          <div class="container flex-column">
-            Selecionar Objeto
-            <select class="dropdown" id="select-objects">
-              <option selected disabled>Objeto</option>
-            </select>
-          </div>
-          <div class="container">
-            Scaling X <input type="number" value="0" class="in" id="scale-x" />
-          </div>
-          <div class="container">
-            Scaling Y <input type="number" value="0" class="in" id="scale-y" />
-          </div>
-          <div class="container">
-            Scaling Z <input type="number" value="0" class="in" id="scale-z" />
-          </div>
-          <div class="container">
-            Translação X <input type="number" value="0" class="in" id="translation-x" />
-          </div>
-          <div class="container">
-            Translação Y <input type="number" value="0" class="in" id="translation-y" />
-          </div>
-          <div class="container">
-            Translação Z <input type="number" value="0" class="in" id="translation-z" />
-          </div>
-          <div class="container flex-column">
-            <button class="btn primary" id="object-load-texture">Carregar Textura</button>
-            <button class="btn primary" id="object-apply-transformation">Aplicar Transformação</button>
-            <button class="btn delete" id="object-remove">Remover</button>
-          </div>
-        </div>
-        <div class="command">
-          <div class="container flex-column">
-            Selecionar Objeto
-            <select class="dropdown">
-              <option selected disabled>Objeto</option>
-            </select>
-          </div>
-          <div class="container">
-            Rotação X <input type="number" value="0" class="in" id="rotate-x" />
-          </div>
-          <div class="container">
-            Rotação Y <input type="number" value="0" class="in" id="rotate-y" />
-          </div>
-          <div class="container">
-            Rotação Z <input type="number" value="0" class="in" id="rotate-z" />
-          </div>
-          <div class="container flex-column">
-            <button class="btn primary" id="object-animate">Animar Objeto</button>
-            <button class="btn primary" id="object-stop-animate">Terminar Animação</button>
-          </div>
-        </div>
-        <div class="command light-source">
-          <h4>Adicionar Fonte de Luz</h4>
-          <div class="container flex-column">
-            Direção
+  <body>
+    <main>
+      <div class="canvas-container">
+        <canvas id="gl-canvas" height="600px" width="600px">
+          Sorry, but your browser does not support HTML5's canvas element.
+        </canvas>
+      </div>
+      <div class="commands-container">
+        <div class="commands">
+          <div class="command add-primitive">
+            <h4>Adicionar Primitiva</h4>
             <div class="container">
-              X <input type="number" value="0" class="in" id="light-src-direction-x" />
-              Y <input type="number" value="0" class="in" id="light-src-direction-y" />
-              Z <input type="number" value="0" class="in" id="light-src-direction-z" />
+              <select class="dropdown" id="select-primitive">
+                <option value="cube">Cubo</option>
+                <option value="pyramid">Pirâmide</option>
+              </select>
             </div>
-            Intensidade
             <div class="container">
-              R <input type="number" value="0" class="in" id="light-src-intensity-r" />
-              G <input type="number" value="0" class="in" id="light-src-intensity-g" />
-              B <input type="number" value="0" class="in" id="light-src-intensity-b" />
+              <button class="btn primary" id="load-texture">
+                Carregar Textura
+              </button>
+              <button class="btn primary" id="add-primitive">
+                Adicionar Primitiva
+              </button>
             </div>
-            <button class="btn primary" id="add-light-src">Adicionar</button>
+          </div>
+          <div class="command add-model">
+            <h4>Adicionar Modelo</h4>
+            <div class="container">
+              <button class="btn primary" id="load-model">
+                Carregar Modelo
+              </button>
+              <button class="btn primary" id="load-texture">
+                Carregar Textura
+              </button>
+            </div>
+          </div>
+          <div class="command manipulate-object">
+            <h4>Manipular Objeto</h4>
+            <div class="container flex-column">
+              Selecionar Objeto
+              <select class="dropdown" id="select-object">
+                <option selected disabled>Objeto</option>
+              </select>
+            </div>
+            <div class="container">
+              Scale
+              <input type="number" value="0" class="in" id="scale" />
+            </div>
+            <div class="container">
+              Translação X
+              <input type="number" value="0" class="in" id="translation-x" />
+            </div>
+            <div class="container">
+              Translação Y
+              <input type="number" value="0" class="in" id="translation-y" />
+            </div>
+            <div class="container">
+              Translação Z
+              <input type="number" value="0" class="in" id="translation-z" />
+            </div>
+            <div class="container">
+              Rotação X
+              <input type="number" value="0" class="in" id="rotation-x" />
+            </div>
+            <div class="container">
+              Rotação Y
+              <input type="number" value="0" class="in" id="rotation-y" />
+            </div>
+            <div class="container">
+              Rotação Z
+              <input type="number" value="0" class="in" id="rotation-z" />
+            </div>
+            <div class="container flex-column">
+              <button class="btn primary" id="object-load-texture">
+                Carregar Textura
+              </button>
+              <button class="btn primary" id="object-apply-transformation">
+                Aplicar Transformação
+              </button>
+              <button class="btn delete" id="object-remove">Remover</button>
+            </div>
+          </div>
+          <div class="command light-source">
+            <h4>Adicionar Fonte de Luz</h4>
+            <div class="container flex-column">
+              Direção
+              <div class="container">
+                X
+                <input
+                  type="number"
+                  value="0"
+                  class="in"
+                  id="light-src-direction-x"
+                />
+                Y
+                <input
+                  type="number"
+                  value="0"
+                  class="in"
+                  id="light-src-direction-y"
+                />
+                Z
+                <input
+                  type="number"
+                  value="0"
+                  class="in"
+                  id="light-src-direction-z"
+                />
+              </div>
+              Intensidade
+              <div class="container">
+                R
+                <input
+                  type="number"
+                  value="0"
+                  class="in"
+                  id="light-src-intensity-r"
+                />
+                G
+                <input
+                  type="number"
+                  value="0"
+                  class="in"
+                  id="light-src-intensity-g"
+                />
+                B
+                <input
+                  type="number"
+                  value="0"
+                  class="in"
+                  id="light-src-intensity-b"
+                />
+              </div>
+              <button class="btn primary" id="add-light-src">Adicionar</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </main>
+    </main>
 
-  <script src="js/webgl/initShaders.js"></script>
-  <script src="js/webgl/gl-matrix-min.js"></script>
-  <script src="js/app.js"></script>
-</body>
-
+    <script src="js/webgl/initShaders.js"></script>
+    <script src="js/webgl/gl-matrix-min.js"></script>
+    <script src="js/app.js"></script>
+  </body>
 </html>
