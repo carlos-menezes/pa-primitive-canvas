@@ -118,12 +118,23 @@ function handleRemoveObject() {
   const selectObjectElement = document.getElementById("select-object");
   const selectedObjectValue =
     selectObjectElement.options[selectObjectElement.selectedIndex].value;
-  objects.splice(selectedObjectValue - 1 ?? 0, 1);
+
+  objects.splice(selectedObjectValue, 1);
 
   const childToRemove = document.querySelector(
     `option[value='${selectedObjectValue}']`
   );
   selectObjectElement.removeChild(childToRemove);
+
+  // As the array of objects has changed, `option`s must be reassigned their values again
+  console.log(selectObjectElement.childNodes);
+  let count = 0;
+  selectObjectElement.childNodes.forEach((child, i) => {
+    if (i !== 0) {
+      child.value = count;
+      count++;
+    }
+  });
 }
 
 function handleAddPrimitive() {
