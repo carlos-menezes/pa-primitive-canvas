@@ -62,11 +62,18 @@
         <div class="command add-model">
           <h4>Adicionar Modelo</h4>
           <div class="container">
-            <button class="btn primary" id="load-model">
-              Carregar Modelo
-            </button>
-            <button class="btn primary" id="load-texture">
-              Carregar Textura
+            <select class="dropdown" id="select-model">
+              <option value="astronaut">Astronaut</option>
+              <option value="bird">Bird</option>
+              <option value="cat">Cat</option>
+              <option value="pig">Pig</option>
+              <option value="tiger">Tiger</option>
+              <option value="trophy">Trophy</option>
+            </select>
+          </div>
+          <div class="container">
+            <button class="btn primary" id="add-model">
+              Adicionar Modelo
             </button>
           </div>
         </div>
@@ -74,9 +81,7 @@
           <h4>Manipular Objeto</h4>
           <div class="container flex-column">
             Selecionar Objeto
-            <select class="dropdown" id="select-object">
-
-            </select>
+            <select class="dropdown" id="select-object"></select>
           </div>
           <div class="container">
             Scale
@@ -147,6 +152,7 @@
   <script src="js/webgl/initShaders.js"></script>
   <script src="js/webgl/gl-matrix-min.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/utils.js"></script>
 </body>
 
 </html>
