@@ -220,11 +220,18 @@ function handleObjectManipulation() {
   const objectIndex =
     selectObjectElement.options[selectObjectElement.selectedIndex].value;
 
-  let scale = parseInt(document.getElementById("scale").value)
+  let scale = parseFloat(document.getElementById("scale").value)
+  let rotateX = parseFloat(document.getElementById("rotation-x").value)
+  let rotateY = parseFloat(document.getElementById("rotation-y").value)
+  let rotateZ = parseFloat(document.getElementById("rotation-z").value)
+
   if (scale) {
     scale = scale / 100;
     objects[objectIndex].scale = scale
   }
+  if (rotateX) objects[objectIndex].rotation[0] = degToRad(rotateX)
+  if (rotateY) objects[objectIndex].rotation[1] = degToRad(rotateY)
+  if (rotateZ) objects[objectIndex].rotation[2] = degToRad(rotateZ)
 }
 
 const colorPyramid = () => {

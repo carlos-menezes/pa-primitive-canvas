@@ -130,3 +130,7 @@ function normalize(points) {
     points[i] = (points[i] / max) * 2 - 1;
   }
 }
+
+function degToRad(deg) {
+  return deg * (Math.PI / 180)
+}
