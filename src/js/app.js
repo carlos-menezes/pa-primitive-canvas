@@ -220,18 +220,21 @@ function handleObjectManipulation() {
   const objectIndex =
     selectObjectElement.options[selectObjectElement.selectedIndex].value;
 
-  let scale = parseFloat(document.getElementById("scale").value)
-  let rotateX = parseFloat(document.getElementById("rotation-x").value)
-  let rotateY = parseFloat(document.getElementById("rotation-y").value)
-  let rotateZ = parseFloat(document.getElementById("rotation-z").value)
+  const scale = parseFloat(document.getElementById("scale").value);
+  const rotateX = parseFloat(document.getElementById("rotation-x").value);
+  const rotateY = parseFloat(document.getElementById("rotation-y").value);
+  const rotateZ = parseFloat(document.getElementById("rotation-z").value);
+  const translateX = parseFloat(document.getElementById("translation-x").value);
+  const translateY = parseFloat(document.getElementById("translation-y").value);
+  const translateZ = parseFloat(document.getElementById("translation-z").value);
 
-  if (scale) {
-    scale = scale / 100;
-    objects[objectIndex].scale = scale
-  }
-  if (rotateX) objects[objectIndex].rotation[0] = degToRad(rotateX)
-  if (rotateY) objects[objectIndex].rotation[1] = degToRad(rotateY)
-  if (rotateZ) objects[objectIndex].rotation[2] = degToRad(rotateZ)
+  if (scale) objects[objectIndex].scale = scale / 100;
+  if (rotateX) objects[objectIndex].rotation[0] = degToRad(rotateX);
+  if (rotateY) objects[objectIndex].rotation[1] = degToRad(rotateY);
+  if (rotateZ) objects[objectIndex].rotation[2] = degToRad(rotateZ);
+  if (translateX) objects[objectIndex].translation[0] = translateX / 100;
+  if (translateY) objects[objectIndex].translation[1] = translateY / 100;
+  if (translateZ) objects[objectIndex].translation[2] = translateZ / 100;
 }
 
 const colorPyramid = () => {
