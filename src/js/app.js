@@ -63,8 +63,8 @@ const createObject = (shape, pointCoordinates, textureCoordinates) => {
     ],
     rotation: [0, Math.random() * (0.1 - 0.01) + 0.01, 0],
     currentRotation: [0, 0, 0],
-    pointCoordinates: [],
-    textureCoordinates: [],
+    pointCoordinates,
+    textureCoordinates,
   };
 };
 
