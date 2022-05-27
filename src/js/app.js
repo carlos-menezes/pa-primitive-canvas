@@ -118,6 +118,10 @@ async function init() {
     .getElementById("add-model")
     .addEventListener("click", handleAddModel);
 
+  document
+    .getElementById("object-apply-transformation")
+    .addEventListener("click", handleObjectManipulation);
+
   // *** Render ***
   render();
 }
@@ -209,6 +213,18 @@ function handleObjectSelection() {
   });
 
   console.log(objects);
+}
+
+function handleObjectManipulation() {
+  const selectObjectElement = document.getElementById("select-object");
+  const objectIndex =
+    selectObjectElement.options[selectObjectElement.selectedIndex].value;
+
+  let scale = parseInt(document.getElementById("scale").value)
+  if (scale) {
+    scale = scale / 100;
+    objects[objectIndex].scale = scale
+  }
 }
 
 const colorPyramid = () => {
