@@ -54,13 +54,9 @@ let program;
 const createObject = (shape, pointCoordinates, textureCoordinates) => {
   return {
     shape,
-    scale: 0.1,
+    scale: 1,
     // [x,y,z]
-    translation: [
-      Math.floor(Math.random() * (8 - -8 + 1)) + -8,
-      Math.floor(Math.random() * (8 - -8 + 1)) + -8,
-      Math.floor(Math.random() * (8 - -8 + 1)) + -8,
-    ],
+    translation: [0, 0, 0],
     rotation: [0, Math.random() * (0.1 - 0.01) + 0.01, 0],
     currentRotation: [0, 0, 0],
     pointCoordinates,
@@ -150,7 +146,7 @@ async function handleAddModel() {
   };
 
   const object = createObject(selectedModelValue, data.position, data.texcoord);
-
+  normalize(object.pointCoordinates);
   objects.push(object);
   addObjectToObjectsSelector(object);
 }
@@ -171,10 +167,8 @@ function handleRemoveObject() {
   console.log(selectObjectElement.childNodes);
   let count = 0;
   selectObjectElement.childNodes.forEach((child, i) => {
-    if (i !== 0) {
-      child.value = count;
-      count++;
-    }
+    child.value = count;
+    count++;
   });
 }
 
@@ -193,8 +187,8 @@ function handleObjectSelection() {
 
   // Scaling
   const scaleInput = document.querySelector("input[id='scale']");
-  scaleInput.textContent = object.scale;
-  scaleInput.value = object.scale;
+  scaleInput.textContent = object.scale * 100;
+  scaleInput.value = object.scale * 100;
 
   // Translation
   const translationInputs = document.querySelectorAll(
@@ -211,14 +205,13 @@ function handleObjectSelection() {
     input.textContent = object.rotation[idx];
     input.value = object.rotation[idx];
   });
-
-  console.log(objects);
 }
 
 function handleObjectManipulation() {
   const selectObjectElement = document.getElementById("select-object");
   const objectIndex =
     selectObjectElement.options[selectObjectElement.selectedIndex].value;
+  console.log(objects[objectIndex]);
 
   const scale = parseFloat(document.getElementById("scale").value);
   const rotateX = parseFloat(document.getElementById("rotation-x").value);
@@ -235,6 +228,8 @@ function handleObjectManipulation() {
   if (translateX) objects[objectIndex].translation[0] = translateX / 100;
   if (translateY) objects[objectIndex].translation[1] = translateY / 100;
   if (translateZ) objects[objectIndex].translation[2] = translateZ / 100;
+
+  console.log(objects[objectIndex]);
 }
 
 const colorPyramid = () => {
