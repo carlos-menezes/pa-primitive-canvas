@@ -131,6 +131,21 @@ function normalize(points) {
   }
 }
 
-function degToRad(deg) {
-  return deg * (Math.PI / 180)
-}
+const degToRad = (deg) => {
+  return deg * (Math.PI / 180);
+};
+
+const radToDeg = (rad) => {
+  return (rad * 180) / Math.PI;
+};
+
+const hexToNormalizedColor = (hex) => {
+  const result = /^#?([a-fA-F\d]{2})([a-fA-F\d]{2})([a-fA-F\d]{2})/g.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16) / 255,
+        g: parseInt(result[2], 16) / 255,
+        b: parseInt(result[3], 16) / 255,
+      }
+    : null;
+};

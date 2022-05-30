@@ -1,8 +1,7 @@
 const MODELS_SRC = "../../assets";
 
-let canvas;
-
-let objects = [];
+let canvas; // Canvas element
+let objects = []; // Objects on the canvas
 
 const pyramidPointsArray = [
   // Front face
@@ -14,8 +13,12 @@ const pyramidPointsArray = [
   // Left face
   0.0, 1.0, 0.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0,
 ];
-
-let pyramidColorsArray = [];
+const pyramidFaceColors = [
+  [0.0, 0.0, 0.0],
+  [0.0, 0.0, 0.0],
+  [0.0, 0.0, 0.0],
+  [0.0, 0.0, 0.0],
+];
 
 const cubePointsArray = [
   // Front
@@ -37,13 +40,19 @@ const cubePointsArray = [
   0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5,
   -0.5, -0.5, -0.5, -0.5,
 ];
-let cubeColorsArray = [];
+const cubeFaceColors = [
+  [0.0, 0.0, 0.0],
+  [0.0, 0.0, 0.0],
+  [0.0, 0.0, 0.0],
+  [0.0, 0.0, 0.0],
+  [0.0, 0.0, 0.0],
+  [0.0, 0.0, 0.0],
+];
 
-let gl;
-let ctm;
+let gl; // WebGL object
+let ctm; // Transformations matrix
 let modelViewMatrix;
-
-let program;
+let program; // Shaders
 
 /**
  * Creates a new object.
@@ -51,16 +60,21 @@ let program;
  * @param {string} shape
  * @returns an object describing the features of the object
  */
-const createObject = (shape, pointCoordinates, textureCoordinates) => {
+const createObject = (shape) => {
   return {
     shape,
-    scale: 1,
+    scale: 0.5,
     // [x,y,z]
     translation: [0, 0, 0],
-    rotation: [0, Math.random() * (0.1 - 0.01) + 0.01, 0],
+    rotation: [
+      0,
+      Math.random() * (0.05 - 0.01) + 0.01,
+      Math.random() * (0.05 - 0.01) + 0.01,
+    ],
     currentRotation: [0, 0, 0],
-    pointCoordinates,
-    textureCoordinates,
+    pointCoordinates: [],
+    textureCoordinates: [],
+    faceColors: [],
   };
 };
 
@@ -83,9 +97,6 @@ async function init() {
     return;
   }
 
-  colorCube();
-  colorPyramid();
-
   // *** Set viewport ***
   gl.viewport(0, 0, canvas.width, canvas.height);
 
@@ -97,6 +108,14 @@ async function init() {
   // *** Initialize vertex and fragment shader ***
   program = initShaders(gl, "vertex-shader", "fragment-shader");
   gl.useProgram(program);
+
+  document
+    .getElementById("select-primitive")
+    .addEventListener("change", handleSelectPrimitive);
+
+  document
+    .getElementById("face-color")
+    .addEventListener("input", handleFaceColorSelection);
 
   document
     .getElementById("add-primitive")
@@ -122,19 +141,58 @@ async function init() {
   render();
 }
 
-function addObjectToObjectsSelector(object) {
+function handleFaceColorSelection(event) {
+  const shape = document.getElementById("select-primitive").value;
+  const colorHex = event.target.value;
+  const normalizedColor = hexToNormalizedColor(colorHex);
+  let face;
+  switch (shape) {
+    case "cube":
+      face = document.getElementById("cube-faces-selector").value;
+      cubeFaceColors[face] = [
+        normalizedColor.r,
+        normalizedColor.g,
+        normalizedColor.b,
+      ];
+      break;
+    case "pyramid":
+      face = document.getElementById("pyramid-faces-selector").value;
+      pyramidFaceColors[face] = [
+        normalizedColor.r,
+        normalizedColor.g,
+        normalizedColor.b,
+      ];
+      break;
+  }
+}
+
+const handleSelectPrimitive = () => {
+  const shape = document.getElementById("select-primitive").value;
+  const cubeFacesColor = document.getElementById("cube-faces-color");
+  const pyramidFacesColor = document.getElementById("pyramid-faces-color");
+  if (shape === "cube") {
+    cubeFacesColor.style.display = "flex";
+    pyramidFacesColor.style.display = "none";
+  } else if (shape === "pyramid") {
+    cubeFacesColor.style.display = "none";
+    pyramidFacesColor.style.display = "flex";
+  }
+};
+
+const addObjectToObjectsSelector = (object) => {
   let objectSelector = document.getElementById("select-object");
   const option = document.createElement("option");
   option.value = objects.length - 1; // The value of the "option" will be the index of the element
   option.innerText = `${object.shape} #${objects.length - 1}`;
   objectSelector.appendChild(option);
-}
+  option.selected = true;
+  handleObjectSelection();
+};
 
-async function handleAddModel() {
+const handleAddModel = async () => {
   const selectModelElement = document.getElementById("select-model");
-  const selectedModelValue =
-    selectModelElement.options[selectModelElement.selectedIndex].value;
-  const modelFilePath = `${MODELS_SRC}/${selectedModelValue}.obj`; // won't work well on Linux due to path separator
+  const selectedModelValue = selectModelElement.value;
+  const modelFilePath = `${MODELS_SRC}/${selectModelElement.value}.obj`; // won't work well on Linux due to path separator
   const modelContent = await loadObjResource(modelFilePath);
   const data = parseOBJ(modelContent);
 
@@ -149,18 +207,22 @@ async function handleAddModel() {
   normalize(object.pointCoordinates);
   objects.push(object);
   addObjectToObjectsSelector(object);
-}
+};
 
-function handleRemoveObject() {
+const handleRemoveObject = () => {
   const selectObjectElement = document.getElementById("select-object");
-  const selectedObjectValue =
-    selectObjectElement.options[selectObjectElement.selectedIndex].value;
+  const selectedObjectValue = selectObjectElement.value;
 
   objects.splice(selectedObjectValue, 1);
 
   const childToRemove = document.querySelector(
-    `option[value='${selectedObjectValue}']`
+    `#select-object > option[value='${selectedObjectValue}']`
   );
+
+  if (childToRemove === null) {
+    return;
+  }
+
   selectObjectElement.removeChild(childToRemove);
 
   // As the array of objects has changed, `option`s must be reassigned their values again
@@ -170,16 +232,28 @@ function handleRemoveObject() {
     child.value = count;
     count++;
   });
-}
+};
 
-function handleAddPrimitive() {
+const handleAddPrimitive = () => {
   const shape = document.getElementById("select-primitive").value;
   const object = createObject(shape);
+  switch (shape) {
+    case "cube":
+      getCubeColors(object);
+      object.faceColors = getCubeColors();
+      object.pointCoordinates = cubePointsArray;
+      break;
+    case "pyramid":
+      object.faceColors = getPyramidColors();
+      object.pointCoordinates = pyramidPointsArray;
+      break;
+  }
   objects.push(object);
+  console.log(object);
   addObjectToObjectsSelector(object);
-}
+};
 
-function handleObjectSelection() {
+const handleObjectSelection = () => {
   const selectObjectElement = document.getElementById("select-object");
   const selectedObjectValue =
     selectObjectElement.options[selectObjectElement.selectedIndex].value;
@@ -202,12 +276,12 @@ function handleObjectSelection() {
   // Rotation
   const rotationInputs = document.querySelectorAll("input[id*='rotation-']");
   rotationInputs.forEach((input, idx) => {
-    input.textContent = object.rotation[idx];
-    input.value = object.rotation[idx];
+    input.textContent = radToDeg(object.rotation[idx]);
+    input.value = radToDeg(object.rotation[idx]);
   });
-}
+};
 
-function handleObjectManipulation() {
+const handleObjectManipulation = () => {
   const selectObjectElement = document.getElementById("select-object");
   const objectIndex =
     selectObjectElement.options[selectObjectElement.selectedIndex].value;
@@ -228,25 +302,28 @@ function handleObjectManipulation() {
   if (translateX) objects[objectIndex].translation[0] = translateX / 100;
   if (translateY) objects[objectIndex].translation[1] = translateY / 100;
   if (translateZ) objects[objectIndex].translation[2] = translateZ / 100;
+};
 
-  console.log(objects[objectIndex]);
-}
-
-const colorPyramid = () => {
-  const vertexColors = [
-    [1.0, 1.0, 0.0], // yellow
-    [0.0, 1.0, 0.0], // green
-    [0.0, 0.0, 1.0], // blue
-    [1.0, 0.0, 1.0], // magenta
-    [0.0, 1.0, 1.0], // cyan
-  ];
-
-  for (let face = 0; face < 5; face++) {
-    let faceColor = vertexColors[face];
-    for (let vertex = 0; vertex < 3; vertex++) {
-      pyramidColorsArray.push(...faceColor);
+const getCubeColors = () => {
+  let colors = [];
+  for (let face = 0; face < 6; face++) {
+    let faceColor = cubeFaceColors[face];
+    for (let vertex = 0; vertex < 6; vertex++) {
+      colors.push(...faceColor);
     }
   }
+  return colors;
+};
+
+const getPyramidColors = () => {
+  let colors = [];
+  for (let face = 0; face < 4; face++) {
+    let faceColor = pyramidFaceColors[face];
+    for (let vertex = 0; vertex < 3; vertex++) {
+      colors.push(...faceColor);
+    }
+  }
+  return colors;
 };
 
 function configureTexture(image) {
@@ -264,13 +341,13 @@ function configureTexture(image) {
   gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
 }
 
-const preparePrimitive = (object, objectPointsArray, objectColorsArray) => {
+const preparePrimitive = (object) => {
   // *** Send position data to the GPU ***
   let vBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
   gl.bufferData(
     gl.ARRAY_BUFFER,
-    new Float32Array(objectPointsArray),
+    new Float32Array(object.pointCoordinates),
     gl.STATIC_DRAW
   );
 
@@ -284,7 +361,7 @@ const preparePrimitive = (object, objectPointsArray, objectColorsArray) => {
   gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
   gl.bufferData(
     gl.ARRAY_BUFFER,
-    new Float32Array(objectColorsArray),
+    new Float32Array(object.faceColors),
     gl.STATIC_DRAW
   );
 
@@ -317,7 +394,7 @@ const preparePrimitive = (object, objectPointsArray, objectColorsArray) => {
   gl.uniformMatrix4fv(modelViewMatrix, false, ctm);
 
   // *** Draw the triangles ***
-  gl.drawArrays(gl.TRIANGLES, 0, objectPointsArray.length / 3);
+  gl.drawArrays(gl.TRIANGLES, 0, object.pointCoordinates.length / 3);
 };
 
 const prepareModel = (object) => {
@@ -376,37 +453,16 @@ const prepareModel = (object) => {
   gl.drawArrays(gl.TRIANGLES, 0, object.pointCoordinates.length / 3);
 };
 
-const colorCube = () => {
-  // Specify the colors of the faces
-  let vertexColors = [
-    [1.0, 1.0, 0.0], // yellow
-    [0.0, 1.0, 0.0], // green
-    [0.0, 0.0, 1.0], // blue
-    [1.0, 0.0, 1.0], // magenta
-    [0.0, 1.0, 1.0], // cyan
-    [1.0, 0.0, 0.0], // red
-  ];
-
-  // Set the color of the faces
-  for (let face = 0; face < 6; face++) {
-    let faceColor = vertexColors[face];
-    for (let vertex = 0; vertex < 6; vertex++) {
-      cubeColorsArray.push(...faceColor);
-    }
-  }
-};
-
 /**
  * Functions that renders all the elements into the canvas
  */
 function render() {
   // Clear the canvas
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
   for (const object of objects) {
-    if (object.shape === "cube") {
-      preparePrimitive(object, cubePointsArray, cubeColorsArray);
-    } else if (object.shape === "pyramid") {
-      preparePrimitive(object, pyramidPointsArray, pyramidColorsArray);
+    if (object.shape === "cube" || object.shape === "pyramid") {
+      preparePrimitive(object);
     } else {
       prepareModel(object);
     }
