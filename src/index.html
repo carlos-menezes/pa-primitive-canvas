@@ -62,11 +62,18 @@
         <div class="command add-model">
           <h4>Adicionar Modelo</h4>
           <div class="container">
-            <button class="btn primary" id="load-model">
-              Carregar Modelo
-            </button>
-            <button class="btn primary" id="load-texture">
-              Carregar Textura
+            <select class="dropdown" id="select-model">
+              <option value="astronaut">Astronaut</option>
+              <option value="bird">Bird</option>
+              <option value="cat">Cat</option>
+              <option value="pig">Pig</option>
+              <option value="tiger">Tiger</option>
+              <option value="trophy">Trophy</option>
+            </select>
+          </div>
+          <div class="container">
+            <button class="btn primary" id="add-model">
+              Adicionar Modelo
             </button>
           </div>
         </div>
@@ -74,37 +81,35 @@
           <h4>Manipular Objeto</h4>
           <div class="container flex-column">
             Selecionar Objeto
-            <select class="dropdown" id="select-object">
-
-            </select>
+            <select class="dropdown" id="select-object"></select>
           </div>
           <div class="container">
             Scale
-            <input type="number" value="0" class="in" id="scale" />
+            <input type="number" max="100" min="0" value="0" step="10" class="in" id="scale" />
           </div>
           <div class="container">
             Translação X
-            <input type="number" value="0" class="in" id="translation-x" />
+            <input type="number" value="0" step="10" class="in" id="translation-x" />
           </div>
           <div class="container">
             Translação Y
-            <input type="number" value="0" class="in" id="translation-y" />
+            <input type="number" value="0" step="10" class="in" id="translation-y" />
           </div>
           <div class="container">
             Translação Z
-            <input type="number" value="0" class="in" id="translation-z" />
+            <input type="number" value="0" step="10" class="in" id="translation-z" />
           </div>
           <div class="container">
             Rotação X
-            <input type="number" value="0" class="in" id="rotation-x" />
+            <input type="number" value="0" step="0.1" class="in" id="rotation-x" />
           </div>
           <div class="container">
             Rotação Y
-            <input type="number" value="0" class="in" id="rotation-y" />
+            <input type="number" value="0" step="0.1" class="in" id="rotation-y" />
           </div>
           <div class="container">
             Rotação Z
-            <input type="number" value="0" class="in" id="rotation-z" />
+            <input type="number" value="0" step="0.1" class="in" id="rotation-z" />
           </div>
           <div class="container flex-column">
             <button class="btn primary" id="object-load-texture">
@@ -147,6 +152,7 @@
   <script src="js/webgl/initShaders.js"></script>
   <script src="js/webgl/gl-matrix-min.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/utils.js"></script>
 </body>
 
 </html>

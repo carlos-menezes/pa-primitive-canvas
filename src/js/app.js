@@ -1,3 +1,5 @@
+const MODELS_SRC = "../../assets";
+
 let canvas;
 
 let objects = [];
@@ -49,18 +51,16 @@ let program;
  * @param {string} shape
  * @returns an object describing the features of the object
  */
-const createObject = (shape) => {
+const createObject = (shape, pointCoordinates, textureCoordinates) => {
   return {
     shape,
-    scale: 0.1,
+    scale: 1,
     // [x,y,z]
-    translation: [
-      Math.floor(Math.random() * (8 - -8 + 1)) + -8,
-      Math.floor(Math.random() * (8 - -8 + 1)) + -8,
-      Math.floor(Math.random() * (8 - -8 + 1)) + -8,
-    ],
+    translation: [0, 0, 0],
     rotation: [0, Math.random() * (0.1 - 0.01) + 0.01, 0],
     currentRotation: [0, 0, 0],
+    pointCoordinates,
+    textureCoordinates,
   };
 };
 
@@ -72,7 +72,7 @@ window.onload = function () {
  * Function that is going to be executed when the window first loads.
  * Sets up webgl boilerplate.
  */
-function init() {
+async function init() {
   // *** Get canvas ***
   canvas = document.getElementById("gl-canvas");
 
@@ -110,8 +110,45 @@ function init() {
     .getElementById("object-remove")
     .addEventListener("click", handleRemoveObject);
 
+  document
+    .getElementById("add-model")
+    .addEventListener("click", handleAddModel);
+
+  document
+    .getElementById("object-apply-transformation")
+    .addEventListener("click", handleObjectManipulation);
+
   // *** Render ***
   render();
+}
+
+function addObjectToObjectsSelector(object) {
+  let objectSelector = document.getElementById("select-object");
+  const option = document.createElement("option");
+  option.value = objects.length - 1; // The value of the "option" will be the index of the element
+  option.innerText = `${object.shape} #${objects.length - 1}`;
+  objectSelector.appendChild(option);
+}
+
+async function handleAddModel() {
+  const selectModelElement = document.getElementById("select-model");
+  const selectedModelValue =
+    selectModelElement.options[selectModelElement.selectedIndex].value;
+  const modelFilePath = `${MODELS_SRC}/${selectedModelValue}.obj`; // won't work well on Linux due to path separator
+  const modelContent = await loadObjResource(modelFilePath);
+  const data = parseOBJ(modelContent);
+
+  const textureFilePath = `${MODELS_SRC}/${selectedModelValue}.png`;
+  let image = new Image();
+  image.src = textureFilePath;
+  image.onload = function () {
+    configureTexture(image);
+  };
+
+  const object = createObject(selectedModelValue, data.position, data.texcoord);
+  normalize(object.pointCoordinates);
+  objects.push(object);
+  addObjectToObjectsSelector(object);
 }
 
 function handleRemoveObject() {
@@ -130,10 +167,8 @@ function handleRemoveObject() {
   console.log(selectObjectElement.childNodes);
   let count = 0;
   selectObjectElement.childNodes.forEach((child, i) => {
-    if (i !== 0) {
-      child.value = count;
-      count++;
-    }
+    child.value = count;
+    count++;
   });
 }
 
@@ -141,11 +176,7 @@ function handleAddPrimitive() {
   const shape = document.getElementById("select-primitive").value;
   const object = createObject(shape);
   objects.push(object);
-  let objectSelector = document.getElementById("select-object");
-  const option = document.createElement("option");
-  option.value = objects.length - 1; // The value of the "option" will be the index of the element
-  option.innerText = `${shape} #${objects.length - 1}`;
-  objectSelector.appendChild(option);
+  addObjectToObjectsSelector(object);
 }
 
 function handleObjectSelection() {
@@ -156,8 +187,8 @@ function handleObjectSelection() {
 
   // Scaling
   const scaleInput = document.querySelector("input[id='scale']");
-  scaleInput.textContent = object.scale;
-  scaleInput.value = object.scale;
+  scaleInput.textContent = object.scale * 100;
+  scaleInput.value = object.scale * 100;
 
   // Translation
   const translationInputs = document.querySelectorAll(
@@ -174,8 +205,31 @@ function handleObjectSelection() {
     input.textContent = object.rotation[idx];
     input.value = object.rotation[idx];
   });
+}
 
-  console.log(objects);
+function handleObjectManipulation() {
+  const selectObjectElement = document.getElementById("select-object");
+  const objectIndex =
+    selectObjectElement.options[selectObjectElement.selectedIndex].value;
+  console.log(objects[objectIndex]);
+
+  const scale = parseFloat(document.getElementById("scale").value);
+  const rotateX = parseFloat(document.getElementById("rotation-x").value);
+  const rotateY = parseFloat(document.getElementById("rotation-y").value);
+  const rotateZ = parseFloat(document.getElementById("rotation-z").value);
+  const translateX = parseFloat(document.getElementById("translation-x").value);
+  const translateY = parseFloat(document.getElementById("translation-y").value);
+  const translateZ = parseFloat(document.getElementById("translation-z").value);
+
+  if (scale) objects[objectIndex].scale = scale / 100;
+  if (rotateX) objects[objectIndex].rotation[0] = degToRad(rotateX);
+  if (rotateY) objects[objectIndex].rotation[1] = degToRad(rotateY);
+  if (rotateZ) objects[objectIndex].rotation[2] = degToRad(rotateZ);
+  if (translateX) objects[objectIndex].translation[0] = translateX / 100;
+  if (translateY) objects[objectIndex].translation[1] = translateY / 100;
+  if (translateZ) objects[objectIndex].translation[2] = translateZ / 100;
+
+  console.log(objects[objectIndex]);
 }
 
 const colorPyramid = () => {
@@ -195,7 +249,22 @@ const colorPyramid = () => {
   }
 };
 
-const prepareObject = (object, objectPointsArray, objectColorsArray) => {
+function configureTexture(image) {
+  let texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(
+    gl.TEXTURE_2D,
+    gl.TEXTURE_MIN_FILTER,
+    gl.NEAREST_MIPMAP_LINEAR
+  );
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
+}
+
+const preparePrimitive = (object, objectPointsArray, objectColorsArray) => {
   // *** Send position data to the GPU ***
   let vBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
@@ -251,6 +320,62 @@ const prepareObject = (object, objectPointsArray, objectColorsArray) => {
   gl.drawArrays(gl.TRIANGLES, 0, objectPointsArray.length / 3);
 };
 
+const prepareModel = (object) => {
+  // *** Send position data to the GPU ***
+  let vBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(object.pointCoordinates),
+    gl.STATIC_DRAW
+  );
+
+  // *** Define the form of the data ***
+  let vPosition = gl.getAttribLocation(program, "vPosition");
+  gl.enableVertexAttribArray(vPosition);
+  gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
+
+  // *** Send color data to the GPU ***
+  let cBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(object.textureCoordinates),
+    gl.STATIC_DRAW
+  );
+
+  // *** Define the color of the data ***
+  let vColor = gl.getAttribLocation(program, "vColor");
+  gl.enableVertexAttribArray(vColor);
+  gl.vertexAttribPointer(vColor, 3, gl.FLOAT, false, 0, 0);
+
+  // *** Get a pointer for the model viewer
+  modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
+  ctm = mat4.create();
+
+  // *** Apply transformations ***
+  mat4.scale(ctm, ctm, [object.scale, object.scale, object.scale]);
+  mat4.translate(ctm, ctm, [
+    object.translation[0],
+    object.translation[1],
+    object.translation[2],
+  ]);
+
+  // *** Rotate cube (if necessary) ***
+  object.currentRotation[0] += object.rotation[0];
+  object.currentRotation[1] += object.rotation[1];
+  object.currentRotation[2] += object.rotation[2];
+  mat4.rotateX(ctm, ctm, object.currentRotation[0]);
+  mat4.rotateY(ctm, ctm, object.currentRotation[1]);
+  mat4.rotateZ(ctm, ctm, object.currentRotation[2]);
+
+  // *** Transfer the information to the model viewer ***
+  gl.uniformMatrix4fv(modelViewMatrix, false, ctm);
+
+  // *** Draw the triangles ***
+  gl.drawArrays(gl.TRIANGLES, 0, object.pointCoordinates.length / 3);
+};
+
 const colorCube = () => {
   // Specify the colors of the faces
   let vertexColors = [
@@ -278,13 +403,12 @@ function render() {
   // Clear the canvas
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   for (const object of objects) {
-    switch (object.shape) {
-      case "cube":
-        prepareObject(object, cubePointsArray, cubeColorsArray);
-        break;
-      case "pyramid":
-        prepareObject(object, pyramidPointsArray, pyramidColorsArray);
-        break;
+    if (object.shape === "cube") {
+      preparePrimitive(object, cubePointsArray, cubeColorsArray);
+    } else if (object.shape === "pyramid") {
+      preparePrimitive(object, pyramidPointsArray, pyramidColorsArray);
+    } else {
+      prepareModel(object);
     }
   }
   // Make the new frame
