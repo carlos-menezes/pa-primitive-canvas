@@ -3,7 +3,7 @@ const MODELS_SRC = "../../assets";
 let canvas; // Canvas element
 let objects = []; // Objects on the canvas
 
-const pyramidPointsArray = [
+const pyramidVertexPoints = [
   // Front face
   0.0, 1.0, 0.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
   // Right face
@@ -20,7 +20,7 @@ const pyramidFaceColors = [
   [0.0, 0.0, 0.0],
 ];
 
-const cubePointsArray = [
+const cubeVertexPoints = [
   // Front
   0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5,
   -0.5, -0.5, 0.5,
@@ -48,6 +48,13 @@ const cubeFaceColors = [
   [0.0, 0.0, 0.0],
   [0.0, 0.0, 0.0],
 ];
+
+let ambientLightUniformLocation;
+let ambientLightIntensity = {
+  r: 0.5,
+  g: 0.5,
+  b: 0.5,
+};
 
 let gl; // WebGL object
 let ctm; // Transformations matrix
@@ -109,6 +116,11 @@ async function init() {
   program = initShaders(gl, "vertex-shader", "fragment-shader");
   gl.useProgram(program);
 
+  ambientLightUniformLocation = gl.getUniformLocation(
+    program,
+    "fAmbientLightIntensity"
+  );
+
   document
     .getElementById("select-primitive")
     .addEventListener("change", handleSelectPrimitive);
@@ -137,9 +149,25 @@ async function init() {
     .getElementById("object-apply-transformation")
     .addEventListener("click", handleObjectManipulation);
 
+  document
+    .getElementById("add-light-src")
+    .addEventListener("click", handleAddLightSource);
+
   // *** Render ***
   render();
 }
+
+const handleAddLightSource = () => {
+  ambientLightIntensity.r = document.getElementById(
+    "light-src-intensity-r"
+  ).value;
+  ambientLightIntensity.g = document.getElementById(
+    "light-src-intensity-g"
+  ).value;
+  ambientLightIntensity.b = document.getElementById(
+    "light-src-intensity-b"
+  ).value;
+};
 
 function handleFaceColorSelection(event) {
   const shape = document.getElementById("select-primitive").value;
@@ -241,11 +269,11 @@ const handleAddPrimitive = () => {
     case "cube":
       getCubeColors(object);
       object.faceColors = getCubeColors();
-      object.pointCoordinates = cubePointsArray;
+      object.pointCoordinates = cubeVertexPoints;
       break;
     case "pyramid":
       object.faceColors = getPyramidColors();
-      object.pointCoordinates = pyramidPointsArray;
+      object.pointCoordinates = pyramidVertexPoints;
       break;
   }
   objects.push(object);
@@ -357,8 +385,8 @@ const preparePrimitive = (object) => {
   gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
 
   // *** Send color data to the GPU ***
-  let cBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+  let colorBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
   gl.bufferData(
     gl.ARRAY_BUFFER,
     new Float32Array(object.faceColors),
@@ -413,8 +441,8 @@ const prepareModel = (object) => {
   gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
 
   // *** Send color data to the GPU ***
-  let cBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+  let colorBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
   gl.bufferData(
     gl.ARRAY_BUFFER,
     new Float32Array(object.textureCoordinates),
@@ -454,11 +482,18 @@ const prepareModel = (object) => {
 };
 
 /**
- * Functions that renders all the elements into the canvas
+ * Renders the scene to the `canvas` element.
  */
 function render() {
   // Clear the canvas
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  gl.uniform3f(
+    ambientLightUniformLocation,
+    ambientLightIntensity.r,
+    ambientLightIntensity.g,
+    ambientLightIntensity.b
+  );
 
   for (const object of objects) {
     if (object.shape === "cube" || object.shape === "pyramid") {
