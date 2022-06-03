@@ -3,6 +3,7 @@ const MODELS_SRC = "../../assets";
 let canvas; // Canvas element
 let objects = []; // Objects on the canvas
 let whiteTexture;
+let texture;
 
 const pyramidPointsArray = [
   // Front face
@@ -350,7 +351,7 @@ const getPyramidColors = () => {
 };
 
 function configureTexture(image) {
-  let texture = gl.createTexture();
+  texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
@@ -435,7 +436,7 @@ const prepareModel = (object) => {
   gl.enableVertexAttribArray(vPosition);
   gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
 
-  gl.bindTexture(gl.TEXTURE_2D, whiteTexture);
+  gl.bindTexture(gl.TEXTURE_2D, texture);
 
   // *** Send color data to the GPU ***
   let cBuffer = gl.createBuffer();
