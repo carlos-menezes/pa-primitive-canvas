@@ -2,6 +2,8 @@ const MODELS_SRC = "../../assets";
 
 let canvas; // Canvas element
 let objects = []; // Objects on the canvas
+let whiteTexture;
+let texture;
 
 const pyramidVertexPoints = [
   // Front face
@@ -73,11 +75,7 @@ const createObject = (shape) => {
     scale: 0.5,
     // [x,y,z]
     translation: [0, 0, 0],
-    rotation: [
-      0,
-      Math.random() * (0.05 - 0.01) + 0.01,
-      Math.random() * (0.05 - 0.01) + 0.01,
-    ],
+    rotation: [0, Math.random() * (0.05 - 0.01) + 0.01, 0],
     currentRotation: [0, 0, 0],
     pointCoordinates: [],
     textureCoordinates: [],
@@ -115,6 +113,23 @@ async function init() {
   // *** Initialize vertex and fragment shader ***
   program = initShaders(gl, "vertex-shader", "fragment-shader");
   gl.useProgram(program);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+  whiteTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, whiteTexture);
+  const whitePixel = new Uint8Array([255, 255, 255, 255]);
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    1,
+    1,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    whitePixel
+  );
 
   ambientLightUniformLocation = gl.getUniformLocation(
     program,
@@ -231,8 +246,10 @@ const handleAddModel = async () => {
     configureTexture(image);
   };
 
-  const object = createObject(selectedModelValue, data.position, data.texcoord);
+  const object = createObject(selectedModelValue);
+  object.pointCoordinates = data.position;
   normalize(object.pointCoordinates);
+  object.textureCoordinates = data.texcoord;
   objects.push(object);
   addObjectToObjectsSelector(object);
 };
@@ -323,6 +340,11 @@ const handleObjectManipulation = () => {
   const translateY = parseFloat(document.getElementById("translation-y").value);
   const translateZ = parseFloat(document.getElementById("translation-z").value);
 
+  console.log(rotateX, degToRad(rotateX));
+
+  objects[objectIndex].rotation = [0, 0, 0];
+  objects[objectIndex].currentRotation = [0, 0, 0];
+
   if (scale) objects[objectIndex].scale = scale / 100;
   if (rotateX) objects[objectIndex].rotation[0] = degToRad(rotateX);
   if (rotateY) objects[objectIndex].rotation[1] = degToRad(rotateY);
@@ -355,7 +377,7 @@ const getPyramidColors = () => {
 };
 
 function configureTexture(image) {
-  let texture = gl.createTexture();
+  texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
@@ -385,8 +407,8 @@ const preparePrimitive = (object) => {
   gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
 
   // *** Send color data to the GPU ***
-  let colorBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  let cBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
   gl.bufferData(
     gl.ARRAY_BUFFER,
     new Float32Array(object.faceColors),
@@ -397,6 +419,8 @@ const preparePrimitive = (object) => {
   let vColor = gl.getAttribLocation(program, "vColor");
   gl.enableVertexAttribArray(vColor);
   gl.vertexAttribPointer(vColor, 3, gl.FLOAT, false, 0, 0);
+
+  gl.bindTexture(gl.TEXTURE_2D, whiteTexture);
 
   // *** Get a pointer for the model viewer
   modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
@@ -440,19 +464,30 @@ const prepareModel = (object) => {
   gl.enableVertexAttribArray(vPosition);
   gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
 
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
   // *** Send color data to the GPU ***
-  let colorBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  let cBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([1, 1, 1]), gl.STATIC_DRAW);
+
+  // *** Define the color of the data ***
+  let vColor = gl.getAttribLocation(program, "vColor");
+  gl.enableVertexAttribArray(vColor);
+  gl.vertexAttribPointer(vColor, 3, gl.FLOAT, false, 0, 0);
+
+  // *** Send texture data to the GPU ***
+  let tBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer);
   gl.bufferData(
     gl.ARRAY_BUFFER,
     new Float32Array(object.textureCoordinates),
     gl.STATIC_DRAW
   );
 
-  // *** Define the color of the data ***
-  let vColor = gl.getAttribLocation(program, "vColor");
-  gl.enableVertexAttribArray(vColor);
-  gl.vertexAttribPointer(vColor, 3, gl.FLOAT, false, 0, 0);
+  let vTexCoord = gl.getAttribLocation(program, "vTexCoord");
+  gl.enableVertexAttribArray(vTexCoord);
+  gl.vertexAttribPointer(vTexCoord, 3, gl.FLOAT, false, 0, 0);
 
   // *** Get a pointer for the model viewer
   modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
