@@ -406,6 +406,8 @@ const preparePrimitive = (object) => {
   gl.enableVertexAttribArray(vPosition);
   gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
 
+  gl.bindTexture(gl.TEXTURE_2D, whiteTexture);
+
   // *** Send color data to the GPU ***
   let cBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);

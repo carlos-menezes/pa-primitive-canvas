@@ -42,7 +42,7 @@
       {
         vec3 normal =  normalize(fNormal);
         vec3 lightIntensity = fAmbientLightIntensity;
-        gl_FragColor = vec4((1.0, 1.0, 1.0) * lightIntensity, 1.0) * texture2D(texture, fTexCoord);
+        gl_FragColor = vec4(fColor * lightIntensity, 1.0) * texture2D(texture, fTexCoord);
       }
     </script>
 </head>
