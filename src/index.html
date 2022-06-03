@@ -12,12 +12,16 @@
 
       attribute vec3 vPosition;
       attribute vec3 vColor;
+      attribute vec2 vTexCoord;
+
       varying vec3 fColor;
+      varying vec2 fTexCoord;
 
       uniform mat4 modelViewMatrix;
 
       void main() {
          fColor = vColor;
+         fTexCoord = vTexCoord;
          gl_Position = modelViewMatrix * vec4(vPosition, 1.0);
       }
     </script>
@@ -26,9 +30,12 @@
 
       varying vec3 fColor;
 
+      varying vec2 fTexCoord;
+      uniform sampler2D texture;
+
       void main()
       {
-        gl_FragColor = vec4(fColor, 1.0);
+        gl_FragColor = vec4(fColor, 1.0) * texture2D(texture, fTexCoord);
       }
     </script>
 </head>
