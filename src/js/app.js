@@ -80,6 +80,7 @@ const createObject = (shape) => {
     pointCoordinates: [],
     textureCoordinates: [],
     faceColors: [],
+    texture: null,
   };
 };
 
@@ -263,17 +264,20 @@ const handleAddModel = async () => {
   const modelContent = await loadObjResource(modelFilePath);
   const data = parseOBJ(modelContent);
 
-  const textureFilePath = `${MODELS_SRC}/${selectedModelValue}.png`;
-  let image = new Image();
-  image.src = textureFilePath;
-  image.onload = () => {
-    configureTexture(image);
-  };
-
   const object = createObject(selectedModelValue);
   object.pointCoordinates = data.position;
   normalize(object.pointCoordinates);
   object.textureCoordinates = data.texcoord;
+
+  const textureFilePath = `${MODELS_SRC}/${selectedModelValue}.png`;
+  let image = new Image();
+  image.src = textureFilePath;
+  image.onload = () => {
+    configureTexture(object, image);
+  };
+
+  console.log(object);
+
   objects.push(object);
   addObjectToObjectsSelector(object);
 };
@@ -406,9 +410,9 @@ const getPyramidColors = () => {
   return colors;
 };
 
-const configureTexture = (image) => {
-  texture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, texture);
+const configureTexture = (object, image) => {
+  object.texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, object.texture);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
   gl.generateMipmap(gl.TEXTURE_2D);
@@ -435,8 +439,6 @@ const preparePrimitive = (object) => {
   let vPosition = gl.getAttribLocation(program, "vPosition");
   gl.enableVertexAttribArray(vPosition);
   gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
-
-  gl.bindTexture(gl.TEXTURE_2D, whiteTexture);
 
   // *** Send color data to the GPU ***
   let cBuffer = gl.createBuffer();
@@ -496,7 +498,8 @@ const prepareModel = (object) => {
   gl.enableVertexAttribArray(vPosition);
   gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
 
-  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.bindTexture(gl.TEXTURE_2D, object.texture);
+  // gl.bindTexture(gl.TEXTURE_2D, texture);
 
   // *** Send color data to the GPU ***
   let cBuffer = gl.createBuffer();
