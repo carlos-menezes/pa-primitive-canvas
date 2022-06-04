@@ -173,6 +173,19 @@ const init = async () => {
     .getElementById("add-light-src")
     .addEventListener("click", handleAddLightSource);
 
+  document.addEventListener("wheel", (event) => {
+    const selectObjectElement = document.getElementById("select-object");
+    const objectIndex =
+      selectObjectElement.options[selectObjectElement.selectedIndex];
+    if (objectIndex) {
+      if (event.deltaY < 0) {
+        objects[objectIndex.value].scale *= 1.1;
+      } else {
+        objects[objectIndex.value].scale /= 1.1;
+      }
+    }
+  });
+
   document.addEventListener("keydown", (event) => {
     const selectObjectElement = document.getElementById("select-object");
     const objectIndex =
@@ -192,13 +205,13 @@ const init = async () => {
           objects[objectIndex.value].rotation[0] += 0.1;
           break;
         case "ArrowLeft":
-          objects[objectIndex.value].translation[1] -= 0.1;
-          break;
-        case "ArrowRight":
           objects[objectIndex.value].translation[0] -= 0.1;
           break;
-        case "ArrowDown":
+        case "ArrowRight":
           objects[objectIndex.value].translation[0] += 0.1;
+          break;
+        case "ArrowDown":
+          objects[objectIndex.value].translation[1] -= 0.1;
           break;
         case "ArrowUp":
           objects[objectIndex.value].translation[1] += 0.1;
