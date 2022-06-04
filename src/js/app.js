@@ -176,20 +176,52 @@ const init = async () => {
   document.addEventListener("keydown", (event) => {
     const selectObjectElement = document.getElementById("select-object");
     const objectIndex =
-      selectObjectElement.options[selectObjectElement.selectedIndex].value;
-    switch (event.key) {
-      case "s":
-        objects[objectIndex].translation[1] -= 0.1;
-        break;
-      case "a":
-        objects[objectIndex].translation[0] -= 0.1;
-        break;
-      case "d":
-        objects[objectIndex].translation[0] += 0.1;
-        break;
-      case "w":
-        objects[objectIndex].translation[1] += 0.1;
-        break;
+      selectObjectElement.options[selectObjectElement.selectedIndex];
+    if (objectIndex) {
+      switch (event.key) {
+        case "a":
+          objects[objectIndex.value].rotation[1] += 0.1;
+          break;
+        case "d":
+          objects[objectIndex.value].rotation[1] -= 0.1;
+          break;
+        case "s":
+          objects[objectIndex.value].rotation[0] -= 0.1;
+          break;
+        case "w":
+          objects[objectIndex.value].rotation[0] += 0.1;
+          break;
+        case "ArrowLeft":
+          objects[objectIndex.value].translation[1] -= 0.1;
+          break;
+        case "ArrowRight":
+          objects[objectIndex.value].translation[0] -= 0.1;
+          break;
+        case "ArrowDown":
+          objects[objectIndex.value].translation[0] += 0.1;
+          break;
+        case "ArrowUp":
+          objects[objectIndex.value].translation[1] += 0.1;
+          break;
+      }
+    }
+  });
+
+  document.addEventListener("keyup", (event) => {
+    const selectObjectElement = document.getElementById("select-object");
+    const objectIndex =
+      selectObjectElement.options[selectObjectElement.selectedIndex];
+    if (objectIndex) {
+      switch (event.key) {
+        case "s":
+        case "w":
+          objects[objectIndex.value].rotation[0] = 0;
+          break;
+        case "a":
+        case "d":
+          objects[objectIndex.value].rotation[1] = 0;
+          break;
+      }
     }
   });
 
