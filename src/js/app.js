@@ -118,7 +118,7 @@ const init = async () => {
 
   whiteTexture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, whiteTexture);
-  const whitePixel = new Uint8Array([255, 255, 255, 255]);
+  const whitePixel = new Uint8Array([255, 255, 255, 0]);
   gl.texImage2D(
     gl.TEXTURE_2D,
     0,
