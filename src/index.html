@@ -12,15 +12,18 @@
 
       attribute vec3 vPosition;
       attribute vec3 vColor;
+      attribute vec2 vTexCoord;
 
-      varying vec3 fColor;
       attribute vec3 aNormal;
       varying vec3 fNormal;
+      varying vec3 fColor;
+      varying vec2 fTexCoord;
 
       uniform mat4 modelViewMatrix;
 
       void main() {
          fColor = vColor;
+         fTexCoord = vTexCoord;
          fNormal = (modelViewMatrix * vec4(aNormal, 0.0)).xyz;
          gl_Position = modelViewMatrix * vec4(vPosition, 1.0);
       }
@@ -32,11 +35,20 @@
       varying vec3 fNormal;
       uniform vec3 fAmbientLightIntensity;
 
+      varying vec2 fTexCoord;
+      uniform sampler2D texture;
+
       void main()
       {
         vec3 normal =  normalize(fNormal);
         vec3 lightIntensity = fAmbientLightIntensity;
-        gl_FragColor = vec4(fColor * lightIntensity, 1.0);
+        if(texture2D(texture, fTexCoord).a != 1.0)
+        {
+          gl_FragColor = vec4(fColor * lightIntensity, 1.0);
+        } else {
+          gl_FragColor = vec4((1.0, 1.0, 1.0) * lightIntensity, 1.0) * texture2D(texture, fTexCoord);
+
+        }
       }
     </script>
 </head>
@@ -80,7 +92,7 @@
           </div>
           <div class="container flex-column">
             <p>Selecionar Cor</p>
-            <input type="color" id="face-color" value="#000">
+            <input type="color" id="face-color" value="#000000" />
           </div>
           <div class="container">
             <button class="btn primary" id="load-texture">

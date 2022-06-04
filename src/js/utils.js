@@ -1,34 +1,34 @@
-async function loadTextResource(location) {
+const loadTextResource = async (location) => {
   var response = await fetch(location);
   const text = await response.text();
   return text;
-}
+};
 
-function loadImage(location, callback) {
+const loadImage = (location, callback) => {
   var image = new Image();
-  image.onload = function () {
+  image.onload = () => {
     callback(image);
   };
   image.src = location;
-}
+};
 
-function loadJSONResource(location, callback) {
-  loadTextResource(location, function (result) {
+const loadJSONResource = (location, callback) => {
+  loadTextResource(location, (result) => {
     try {
       callback(JSON.parse(result));
     } catch (e) {
       console.log("ERROR PARSING MODEL");
     }
   });
-}
+};
 
-async function loadObjResource(location) {
+const loadObjResource = async (location) => {
   const response = await fetch(location);
   const text = await response.text();
   return text;
-}
+};
 
-function parseOBJ(text) {
+const parseOBJ = (text) => {
   // because indices are base 1 let's just fill in the 0th data
   const objPositions = [[0, 0, 0]];
   const objTexcoords = [[0, 0]];
@@ -44,16 +44,16 @@ function parseOBJ(text) {
     [], // normals
   ];
 
-  function newGeometry() {
+  const newGeometry = () => {
     // If there is an existing geometry and it's
     // not empty then start a new one.
     if (geometry && geometry.data.position.length) {
       geometry = undefined;
     }
     setGeometry();
-  }
+  };
 
-  function addVertex(vert) {
+  const addVertex = (vert) => {
     const ptn = vert.split("/");
     ptn.forEach((objIndexStr, i) => {
       if (!objIndexStr) {
@@ -63,7 +63,7 @@ function parseOBJ(text) {
       const index = objIndex + (objIndex >= 0 ? 0 : objVertexData[i].length);
       webglVertexData[i].push(...objVertexData[i][index]);
     });
-  }
+  };
 
   const keywords = {
     v(parts) {
@@ -112,9 +112,9 @@ function parseOBJ(text) {
     texcoord: webglVertexData[1],
     normal: webglVertexData[2],
   };
-}
+};
 
-function normalize(points) {
+const normalize = (points) => {
   var min = points[0];
   var max = points[1];
   for (var i = 0; i < points.length; i++) {
@@ -129,7 +129,7 @@ function normalize(points) {
   for (var i = 0; i < points.length; i++) {
     points[i] = (points[i] / max) * 2 - 1;
   }
-}
+};
 
 const degToRad = (deg) => {
   return deg * (Math.PI / 180);
