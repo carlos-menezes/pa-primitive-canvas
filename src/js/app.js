@@ -83,7 +83,7 @@ const createObject = (shape) => {
   };
 };
 
-window.onload = function () {
+window.onload = () => {
   init();
 };
 
@@ -91,7 +91,7 @@ window.onload = function () {
  * Function that is going to be executed when the window first loads.
  * Sets up webgl boilerplate.
  */
-async function init() {
+const init = async () => {
   // *** Get canvas ***
   canvas = document.getElementById("gl-canvas");
 
@@ -145,6 +145,10 @@ async function init() {
     .addEventListener("input", handleFaceColorSelection);
 
   document
+    .getElementById("load-texture")
+    .addEventListener("click", handleLoadTexture);
+
+  document
     .getElementById("add-primitive")
     .addEventListener("click", handleAddPrimitive);
 
@@ -168,9 +172,29 @@ async function init() {
     .getElementById("add-light-src")
     .addEventListener("click", handleAddLightSource);
 
+  document.addEventListener("keydown", (event) => {
+    const selectObjectElement = document.getElementById("select-object");
+    const objectIndex =
+      selectObjectElement.options[selectObjectElement.selectedIndex].value;
+    switch (event.key) {
+      case "s":
+        objects[objectIndex].translation[1] -= 0.1;
+        break;
+      case "a":
+        objects[objectIndex].translation[0] -= 0.1;
+        break;
+      case "d":
+        objects[objectIndex].translation[0] += 0.1;
+        break;
+      case "w":
+        objects[objectIndex].translation[1] += 0.1;
+        break;
+    }
+  });
+
   // *** Render ***
   render();
-}
+};
 
 const handleAddLightSource = () => {
   ambientLightIntensity.r = document.getElementById(
@@ -184,7 +208,7 @@ const handleAddLightSource = () => {
   ).value;
 };
 
-function handleFaceColorSelection(event) {
+const handleFaceColorSelection = (event) => {
   const shape = document.getElementById("select-primitive").value;
   const colorHex = event.target.value;
   const normalizedColor = hexToNormalizedColor(colorHex);
@@ -207,7 +231,7 @@ function handleFaceColorSelection(event) {
       ];
       break;
   }
-}
+};
 
 const handleSelectPrimitive = () => {
   const shape = document.getElementById("select-primitive").value;
@@ -242,7 +266,7 @@ const handleAddModel = async () => {
   const textureFilePath = `${MODELS_SRC}/${selectedModelValue}.png`;
   let image = new Image();
   image.src = textureFilePath;
-  image.onload = function () {
+  image.onload = () => {
     configureTexture(image);
   };
 
@@ -277,6 +301,12 @@ const handleRemoveObject = () => {
     child.value = count;
     count++;
   });
+};
+
+const handleLoadTexture = () => {
+  if (objects.length === 0) {
+    alert("Sem primitivas e/ou modelos para adicionar textura.");
+  }
 };
 
 const handleAddPrimitive = () => {
@@ -376,7 +406,7 @@ const getPyramidColors = () => {
   return colors;
 };
 
-function configureTexture(image) {
+const configureTexture = (image) => {
   texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -389,7 +419,7 @@ function configureTexture(image) {
   );
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
-}
+};
 
 const preparePrimitive = (object) => {
   // *** Send position data to the GPU ***
@@ -521,7 +551,7 @@ const prepareModel = (object) => {
 /**
  * Renders the scene to the `canvas` element.
  */
-function render() {
+const render = () => {
   // Clear the canvas
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -541,4 +571,4 @@ function render() {
   }
   // Make the new frame
   requestAnimationFrame(render);
-}
+};
