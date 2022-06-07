@@ -2,9 +2,12 @@ const MODELS_SRC = "../../assets";
 
 let canvas; // Canvas element
 let objects = []; // Objects on the canvas
-let whiteTexture;
-let texture;
+let whiteTexture; // Texture used for objects with plain colors
+let texture; // Texture used for custom objects
 
+/**
+ * Vertex coordinates for the pyramid primitive.
+ */
 const pyramidVertexPoints = [
   // Front face
   0.0, 1.0, 0.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0,
@@ -15,6 +18,10 @@ const pyramidVertexPoints = [
   // Left face
   0.0, 1.0, 0.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0,
 ];
+
+/**
+ * RGB values for each face of the pyramid primitive.
+ */
 const pyramidFaceColors = [
   [0.0, 0.0, 0.0],
   [0.0, 0.0, 0.0],
@@ -22,6 +29,9 @@ const pyramidFaceColors = [
   [0.0, 0.0, 0.0],
 ];
 
+/**
+ * Vertex coordinates for the cube primitive.
+ */
 const cubeVertexPoints = [
   // Front
   0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5,
@@ -42,6 +52,10 @@ const cubeVertexPoints = [
   0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5,
   -0.5, -0.5, -0.5, -0.5,
 ];
+
+/**
+ * RGB values for each face of the cube primitive.
+ */
 const cubeFaceColors = [
   [0.0, 0.0, 0.0],
   [0.0, 0.0, 0.0],
@@ -51,6 +65,9 @@ const cubeFaceColors = [
   [0.0, 0.0, 0.0],
 ];
 
+/**
+ * Ambient light location on the vertex shader and (default) values.
+ */
 let ambientLightUniformLocation;
 let ambientLightIntensity = {
   r: 0.5,
@@ -64,7 +81,9 @@ let modelViewMatrix;
 let program; // Shaders
 
 /**
- * Creates a new object.
+ * Creates a new object which is later prepared in either:
+ * - {@link preparePrimitive}, if the object's `shape` attribute is either `pyramid` or `cube`;
+ * - {@link prepareModel}, if the object's shape is not a primitive.
  *
  * @param {string} shape
  * @returns an object describing the features of the object
@@ -84,6 +103,9 @@ const createObject = (shape) => {
   };
 };
 
+/**
+ * Once the page has loaded the DOM tree, run the {@link init} function.
+ */
 window.onload = () => {
   init();
 };
@@ -91,6 +113,12 @@ window.onload = () => {
 /**
  * Function that is going to be executed when the window first loads.
  * Sets up webgl boilerplate.
+ */
+
+/**
+ * {@link init} is executed when the window first loads.
+ * It assembles WebGL boilerplate code and sets up event listeners for the the UI controls shown to the user in the page.
+ * @returns `-1` if WebGL is not supported by the browser; `0` otherwise.
  */
 const init = async () => {
   // *** Get canvas ***
@@ -100,7 +128,7 @@ const init = async () => {
   gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
   if (!gl) {
     alert("WebGL not supported");
-    return;
+    return -1;
   }
 
   // *** Set viewport ***
@@ -240,8 +268,13 @@ const init = async () => {
 
   // *** Render ***
   render();
+
+  return 0;
 };
 
+/**
+ * Handles the manipulation of the LIGHT SOURCE UI controls.
+ */
 const handleAddLightSource = () => {
   ambientLightIntensity.r = document.getElementById(
     "light-src-intensity-r"
@@ -254,6 +287,10 @@ const handleAddLightSource = () => {
   ).value;
 };
 
+/**
+ * Handles the manipulation of the PRIMITIVE FACE COLOR UI controls.
+ * @param {Event} event
+ */
 const handleFaceColorSelection = (event) => {
   const shape = document.getElementById("select-primitive").value;
   const colorHex = event.target.value;
@@ -279,6 +316,9 @@ const handleFaceColorSelection = (event) => {
   }
 };
 
+/**
+ * Handles the manipulation of the SELECT PRIMITIVE UI controls.
+ */
 const handleSelectPrimitive = () => {
   const shape = document.getElementById("select-primitive").value;
   const cubeFacesColor = document.getElementById("cube-faces-color");
@@ -292,6 +332,11 @@ const handleSelectPrimitive = () => {
   }
 };
 
+/**
+ * Adds an object (created with {@link createObject}) to the "SELECT OBJECT" select UI element.
+ *
+ * @param {*} object
+ */
 const addObjectToObjectsSelector = (object) => {
   let objectSelector = document.getElementById("select-object");
   const option = document.createElement("option");
@@ -302,6 +347,10 @@ const addObjectToObjectsSelector = (object) => {
   handleObjectSelection();
 };
 
+/**
+ * Adds a custom model to the list of objects to be rendered.
+ * This loads the object and the corresponding texture (names must match).
+ */
 const handleAddModel = async () => {
   const selectModelElement = document.getElementById("select-model");
   const selectedModelValue = selectModelElement.value;
@@ -327,6 +376,10 @@ const handleAddModel = async () => {
   addObjectToObjectsSelector(object);
 };
 
+/**
+ * Removes an object from the "SELECT OBJECT" select UI element.
+ * @returns `-1` if there is no child to be removed; `0` otherwise.
+ */
 const handleRemoveObject = () => {
   const selectObjectElement = document.getElementById("select-object");
   const selectedObjectValue = selectObjectElement.value;
@@ -338,26 +391,33 @@ const handleRemoveObject = () => {
   );
 
   if (childToRemove === null) {
-    return;
+    return -1;
   }
 
   selectObjectElement.removeChild(childToRemove);
 
   // As the array of objects has changed, `option`s must be reassigned their values again
-  console.log(selectObjectElement.childNodes);
   let count = 0;
   selectObjectElement.childNodes.forEach((child, i) => {
     child.value = count;
     count++;
   });
+
+  return 0;
 };
 
+/**
+ * Handles texture loading.
+ */
 const handleLoadTexture = () => {
   if (objects.length === 0) {
     alert("Sem primitivas e/ou modelos para adicionar textura.");
   }
 };
 
+/**
+ * Adds a primitive to the scene.
+ */
 const handleAddPrimitive = () => {
   const shape = document.getElementById("select-primitive").value;
   const object = createObject(shape);
@@ -373,10 +433,14 @@ const handleAddPrimitive = () => {
       break;
   }
   objects.push(object);
-  console.log(object);
   addObjectToObjectsSelector(object);
 };
 
+/**
+ * Handles option selection of the "SELECT OBJECT" select UI element.
+ * This function gets the values of the object from the `objects` array and loads them into the inputs.
+ * TODO: when values are modified with keys, update values of the input elements
+ */
 const handleObjectSelection = () => {
   const selectObjectElement = document.getElementById("select-object");
   const selectedObjectValue =
@@ -405,6 +469,9 @@ const handleObjectSelection = () => {
   });
 };
 
+/**
+ * Handles manipulation of the selected object, namely it's `scale`, `rotation` and `translation` values.
+ */
 const handleObjectManipulation = () => {
   const selectObjectElement = document.getElementById("select-object");
   const objectIndex =
@@ -433,6 +500,10 @@ const handleObjectManipulation = () => {
   if (translateZ) objects[objectIndex].translation[2] = translateZ / 100;
 };
 
+/**
+ * Generates an array of colors for each vertex of the cube.
+ * @returns array of colors
+ */
 const getCubeColors = () => {
   let colors = [];
   for (let face = 0; face < 6; face++) {
@@ -444,6 +515,10 @@ const getCubeColors = () => {
   return colors;
 };
 
+/**
+ * Generates an array of colors for each vertex of the pyramid.
+ * @returns array of colors
+ */
 const getPyramidColors = () => {
   let colors = [];
   for (let face = 0; face < 4; face++) {
@@ -455,6 +530,12 @@ const getPyramidColors = () => {
   return colors;
 };
 
+/**
+ * Configures the texture of an object.
+ *
+ * @param {*} object
+ * @param {*} image
+ */
 const configureTexture = (object, image) => {
   object.texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, object.texture);
@@ -470,6 +551,11 @@ const configureTexture = (object, image) => {
   gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
 };
 
+/**
+ * Prepares a primitive to be rendered on the canvas.
+ * This function sets up the buffer and loads the needed data into them.
+ * @param {*} object
+ */
 const preparePrimitive = (object) => {
   // *** Send position data to the GPU ***
   let vBuffer = gl.createBuffer();
@@ -528,6 +614,11 @@ const preparePrimitive = (object) => {
   gl.drawArrays(gl.TRIANGLES, 0, object.pointCoordinates.length / 3);
 };
 
+/**
+ * Prepares a custom model to be rendered on the canvas.
+ * This function sets up the buffer and loads the needed data into them.
+ * @param {*} object
+ */
 const prepareModel = (object) => {
   // *** Send position data to the GPU ***
   let vBuffer = gl.createBuffer();
