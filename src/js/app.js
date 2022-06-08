@@ -75,6 +75,22 @@ let ambientLightIntensity = {
   b: 0.5,
 };
 
+/**
+ * Direction light location and its default values.
+ */
+let sunlightDirectionUniformLocation;
+let sunlightDirection = {
+  x: 0.5,
+  y: 0.5,
+  z: 0.5,
+}
+let sunlightIntensityUniformLocation;
+let sunlightIntensity = {
+  r: 0.5,
+  g: 0.5,
+  b: 0.5,
+};
+
 let gl; // WebGL object
 let ctm; // Transformations matrix
 let modelViewMatrix;
@@ -164,6 +180,9 @@ const init = async () => {
     program,
     "fAmbientLightIntensity"
   );
+
+  sunlightIntensityUniformLocation =  gl.getUniformLocation(program,'sun.color');
+  sunlightDirectionUniformLocation =  gl.getUniformLocation(program,'sun.direction');
 
   document
     .getElementById("select-primitive")
@@ -284,6 +303,26 @@ const handleAddLightSource = () => {
   ).value;
   ambientLightIntensity.b = document.getElementById(
     "light-src-intensity-b"
+  ).value;
+
+  sunlightDirection.x = document.getElementById(
+    "light-src-direction-x"
+  ).value
+  sunlightDirection.y = document.getElementById(
+    "light-src-direction-y"
+  ).value
+  sunlightDirection.z = document.getElementById(
+    "light-src-direction-z"
+  ).value
+
+  sunlightIntensity.r = document.getElementById(
+    "light-src-intensity-sun-r"
+  ).value;
+  sunlightIntensity.g = document.getElementById(
+    "light-src-intensity-sun-g"
+  ).value;
+  sunlightIntensity.b = document.getElementById(
+    "light-src-intensity-sun-b"
   ).value;
 };
 
@@ -699,6 +738,19 @@ const render = () => {
     ambientLightIntensity.r,
     ambientLightIntensity.g,
     ambientLightIntensity.b
+  );
+
+  gl.uniform3f(
+    sunlightDirectionUniformLocation,
+    sunlightDirection.x,
+    sunlightDirection.y,
+    sunlightDirection.z,
+  )
+  gl.uniform3f(
+    sunlightIntensityUniformLocation,
+    sunlightIntensity.r,  
+    sunlightIntensity.g,  
+    sunlightIntensity.b  
   );
 
   for (const object of objects) {
