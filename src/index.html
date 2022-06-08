@@ -45,14 +45,15 @@
       uniform sampler2D texture;
 
       void main() {
-        vec3 sunlightDirection = normalize(sun.direction); 
+        vec3 sunlightDirection = normalize(sun.direction);
         vec3 normal =  normalize(fNormal);
         vec3 lightIntensity = fAmbientLightIntensity + (sun.color * max(dot(normal,sunlightDirection),0.0));
-        
-        if(texture2D(texture, fTexCoord).a != 1.0) {
+        vec4 texel = texture2D(texture, fTexCoord);
+
+        if(texel.a != 1.0) {
           gl_FragColor = vec4(fColor * lightIntensity, 1.0);
         } else {
-          gl_FragColor = vec4((1.0, 1.0, 1.0) * lightIntensity, 1.0) * texture2D(texture, fTexCoord);
+          gl_FragColor = vec4(texel.rgb * lightIntensity, 1.0) * texel;
         }
       }
     </script>

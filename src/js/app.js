@@ -116,6 +116,7 @@ const createObject = (shape) => {
     textureCoordinates: [],
     faceColors: [],
     texture: null,
+    normals: []
   };
 };
 
@@ -137,7 +138,7 @@ window.onload = () => {
  * @returns `-1` if WebGL is not supported by the browser; `0` otherwise.
  */
 const init = async () => {
-  // *** Get canvas ***
+  // Get canvas
   canvas = document.getElementById("gl-canvas");
 
   /** @type {WebGLRenderingContext} */ // ONLY FOR VS CODE
@@ -147,15 +148,15 @@ const init = async () => {
     return -1;
   }
 
-  // *** Set viewport ***
+  // Set viewport
   gl.viewport(0, 0, canvas.width, canvas.height);
 
-  // *** Set color to the canvas ***
+  // Set color to the canvas
   gl.clearColor(1.0, 1.0, 1.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.DEPTH_TEST);
 
-  // *** Initialize vertex and fragment shader ***
+  // Initialize vertex and fragment shader
   program = initShaders(gl, "vertex-shader", "fragment-shader");
   gl.useProgram(program);
   gl.enable(gl.BLEND);
@@ -285,7 +286,7 @@ const init = async () => {
     }
   });
 
-  // *** Render ***
+  // Render
   render();
 
   return 0;
@@ -401,6 +402,7 @@ const handleAddModel = async () => {
   object.pointCoordinates = data.position;
   normalize(object.pointCoordinates);
   object.textureCoordinates = data.texcoord;
+  object.normals = data.normal;
 
   const textureFilePath = `${MODELS_SRC}/${selectedModelValue}.png`;
   let image = new Image();
@@ -596,7 +598,7 @@ const configureTexture = (object, image) => {
  * @param {*} object
  */
 const preparePrimitive = (object) => {
-  // *** Send position data to the GPU ***
+  // Send position data to the GPU
   let vBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
   gl.bufferData(
@@ -605,12 +607,12 @@ const preparePrimitive = (object) => {
     gl.STATIC_DRAW
   );
 
-  // *** Define the form of the data ***
+  // Define the form of the data
   let vPosition = gl.getAttribLocation(program, "vPosition");
   gl.enableVertexAttribArray(vPosition);
   gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
 
-  // *** Send color data to the GPU ***
+  // Send color data to the GPU
   let cBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
   gl.bufferData(
@@ -619,18 +621,18 @@ const preparePrimitive = (object) => {
     gl.STATIC_DRAW
   );
 
-  // *** Define the color of the data ***
+  // Define the color of the data
   let vColor = gl.getAttribLocation(program, "vColor");
   gl.enableVertexAttribArray(vColor);
   gl.vertexAttribPointer(vColor, 3, gl.FLOAT, false, 0, 0);
 
   gl.bindTexture(gl.TEXTURE_2D, whiteTexture);
 
-  // *** Get a pointer for the model viewer
+  // Get a pointer for the model vi
   modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
   ctm = mat4.create();
 
-  // *** Apply transformations ***
+  // Apply transformations
   mat4.scale(ctm, ctm, [object.scale, object.scale, object.scale]);
   mat4.translate(ctm, ctm, [
     object.translation[0],
@@ -638,7 +640,7 @@ const preparePrimitive = (object) => {
     object.translation[2],
   ]);
 
-  // *** Rotate cube (if necessary) ***
+  // Rotate cube (if necessary)
   object.currentRotation[0] += object.rotation[0];
   object.currentRotation[1] += object.rotation[1];
   object.currentRotation[2] += object.rotation[2];
@@ -646,10 +648,10 @@ const preparePrimitive = (object) => {
   mat4.rotateY(ctm, ctm, object.currentRotation[1]);
   mat4.rotateZ(ctm, ctm, object.currentRotation[2]);
 
-  // *** Transfer the information to the model viewer ***
+  // Transfer the information to the model viewer
   gl.uniformMatrix4fv(modelViewMatrix, false, ctm);
 
-  // *** Draw the triangles ***
+  // Draw the triangles
   gl.drawArrays(gl.TRIANGLES, 0, object.pointCoordinates.length / 3);
 };
 
@@ -659,7 +661,7 @@ const preparePrimitive = (object) => {
  * @param {*} object
  */
 const prepareModel = (object) => {
-  // *** Send position data to the GPU ***
+  // Send position data to the GPU
   let vBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
   gl.bufferData(
@@ -668,7 +670,7 @@ const prepareModel = (object) => {
     gl.STATIC_DRAW
   );
 
-  // *** Define the form of the data ***
+  // Define the form of the data
   let vPosition = gl.getAttribLocation(program, "vPosition");
   gl.enableVertexAttribArray(vPosition);
   gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
@@ -676,17 +678,17 @@ const prepareModel = (object) => {
   gl.bindTexture(gl.TEXTURE_2D, object.texture);
   // gl.bindTexture(gl.TEXTURE_2D, texture);
 
-  // *** Send color data to the GPU ***
+  // Send color data to the GPU
   let cBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([1, 1, 1]), gl.STATIC_DRAW);
 
-  // *** Define the color of the data ***
+  // Define the color of the data
   let vColor = gl.getAttribLocation(program, "vColor");
   gl.enableVertexAttribArray(vColor);
   gl.vertexAttribPointer(vColor, 3, gl.FLOAT, false, 0, 0);
 
-  // *** Send texture data to the GPU ***
+  // Send texture data to the GPU
   let tBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer);
   gl.bufferData(
@@ -699,11 +701,19 @@ const prepareModel = (object) => {
   gl.enableVertexAttribArray(vTexCoord);
   gl.vertexAttribPointer(vTexCoord, 3, gl.FLOAT, false, 0, 0);
 
-  // *** Get a pointer for the model viewer
+   // Send normals to the GPU
+   var nBuffer = gl.createBuffer();
+   gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object.normals), gl.STATIC_DRAW);
+   var vNormData = gl.getAttribLocation(program, "aNormal");
+   gl.vertexAttribPointer(vNormData, 3, gl.FLOAT, gl.TRUE, 0, 0);
+   gl.enableVertexAttribArray(vNormData);
+
+  // Get a pointer for the model viewer
   modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
   ctm = mat4.create();
 
-  // *** Apply transformations ***
+  // Apply transformations
   mat4.scale(ctm, ctm, [object.scale, object.scale, object.scale]);
   mat4.translate(ctm, ctm, [
     object.translation[0],
@@ -711,7 +721,7 @@ const prepareModel = (object) => {
     object.translation[2],
   ]);
 
-  // *** Rotate cube (if necessary) ***
+  // Rotate cube (if necessary)
   object.currentRotation[0] += object.rotation[0];
   object.currentRotation[1] += object.rotation[1];
   object.currentRotation[2] += object.rotation[2];
@@ -719,10 +729,10 @@ const prepareModel = (object) => {
   mat4.rotateY(ctm, ctm, object.currentRotation[1]);
   mat4.rotateZ(ctm, ctm, object.currentRotation[2]);
 
-  // *** Transfer the information to the model viewer ***
+  // Transfer the information to the model viewer
   gl.uniformMatrix4fv(modelViewMatrix, false, ctm);
 
-  // *** Draw the triangles ***
+  // Draw the triangles
   gl.drawArrays(gl.TRIANGLES, 0, object.pointCoordinates.length / 3);
 };
 
@@ -748,9 +758,9 @@ const render = () => {
   )
   gl.uniform3f(
     sunlightIntensityUniformLocation,
-    sunlightIntensity.r,  
-    sunlightIntensity.g,  
-    sunlightIntensity.b  
+    sunlightIntensity.r,
+    sunlightIntensity.g,
+    sunlightIntensity.b
   );
 
   for (const object of objects) {
