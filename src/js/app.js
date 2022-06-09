@@ -1,4 +1,4 @@
-const MODELS_SRC = "../../assets";
+const MODELS_SRC = "../assets";
 
 let canvas; // Canvas element
 let objects = []; // Objects on the canvas
@@ -395,6 +395,7 @@ const handleAddModel = async () => {
   const selectModelElement = document.getElementById("select-model");
   const selectedModelValue = selectModelElement.value;
   const modelFilePath = `${MODELS_SRC}/${selectModelElement.value}.obj`; // won't work well on Linux due to path separator
+  console.log(modelFilePath);
   const modelContent = await loadObjResource(modelFilePath);
   const data = parseOBJ(modelContent);
 
