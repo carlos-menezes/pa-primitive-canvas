@@ -1,4 +1,4 @@
-const MODELS_SRC = "../assets";
+const MODELS_SRC = "./assets";
 
 let canvas; // Canvas element
 let objects = []; // Objects on the canvas

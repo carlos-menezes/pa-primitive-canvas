@@ -29,6 +29,7 @@ const loadObjResource = async (location) => {
 };
 
 const parseOBJ = (text) => {
+
   // because indices are base 1 let's just fill in the 0th data
   const objPositions = [[0, 0, 0]];
   const objTexcoords = [[0, 0]];
