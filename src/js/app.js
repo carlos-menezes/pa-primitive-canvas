@@ -83,7 +83,7 @@ let sunlightDirection = {
   x: 0.5,
   y: 0.5,
   z: 0.5,
-}
+};
 let sunlightIntensityUniformLocation;
 let sunlightIntensity = {
   r: 0.5,
@@ -116,7 +116,7 @@ const createObject = (shape) => {
     textureCoordinates: [],
     faceColors: [],
     texture: null,
-    normals: []
+    normals: [],
   };
 };
 
@@ -182,8 +182,14 @@ const init = async () => {
     "fAmbientLightIntensity"
   );
 
-  sunlightIntensityUniformLocation =  gl.getUniformLocation(program,'sun.color');
-  sunlightDirectionUniformLocation =  gl.getUniformLocation(program,'sun.direction');
+  sunlightIntensityUniformLocation = gl.getUniformLocation(
+    program,
+    "sun.color"
+  );
+  sunlightDirectionUniformLocation = gl.getUniformLocation(
+    program,
+    "sun.direction"
+  );
 
   document
     .getElementById("select-primitive")
@@ -221,75 +227,126 @@ const init = async () => {
     .getElementById("add-light-src")
     .addEventListener("click", handleAddLightSource);
 
-  document.addEventListener("wheel", (event) => {
-    const selectObjectElement = document.getElementById("select-object");
-    const objectIndex =
-      selectObjectElement.options[selectObjectElement.selectedIndex];
-    if (objectIndex) {
-      if (event.deltaY < 0) {
-        objects[objectIndex.value].scale *= 1.1;
-      } else {
-        objects[objectIndex.value].scale /= 1.1;
-      }
-    }
-  });
+  document
+    .getElementById("object-stop-animation")
+    .addEventListener("click", handleStopAnimation);
 
-  document.addEventListener("keydown", (event) => {
-    const selectObjectElement = document.getElementById("select-object");
-    const objectIndex =
-      selectObjectElement.options[selectObjectElement.selectedIndex];
-    if (objectIndex) {
-      switch (event.key) {
-        case "a":
-          objects[objectIndex.value].rotation[1] += 0.1;
-          break;
-        case "d":
-          objects[objectIndex.value].rotation[1] -= 0.1;
-          break;
-        case "s":
-          objects[objectIndex.value].rotation[0] -= 0.1;
-          break;
-        case "w":
-          objects[objectIndex.value].rotation[0] += 0.1;
-          break;
-        case "ArrowLeft":
-          objects[objectIndex.value].translation[0] -= 0.1;
-          break;
-        case "ArrowRight":
-          objects[objectIndex.value].translation[0] += 0.1;
-          break;
-        case "ArrowDown":
-          objects[objectIndex.value].translation[1] -= 0.1;
-          break;
-        case "ArrowUp":
-          objects[objectIndex.value].translation[1] += 0.1;
-          break;
-      }
-    }
-  });
+  document.addEventListener("wheel", handleMouseWheel);
 
-  document.addEventListener("keyup", (event) => {
-    const selectObjectElement = document.getElementById("select-object");
-    const objectIndex =
-      selectObjectElement.options[selectObjectElement.selectedIndex];
-    if (objectIndex) {
-      switch (event.key) {
-        case "s":
-        case "w":
-          objects[objectIndex.value].rotation[0] = 0;
-          break;
-        case "a":
-        case "d":
-          objects[objectIndex.value].rotation[1] = 0;
-          break;
-      }
-    }
-  });
+  document.addEventListener("keydown", handleKeyDown);
+
+  document.addEventListener("keyup", handleKeyUp);
 
   // Render
   render();
 
   return 0;
+};
+
+/**
+ * Handles the scroll event.
+ * @param {*} event
+ */
+const handleMouseWheel = (event) => {
+  const objectIndex = getSelectedObjectIndex();
+  if (objectIndex) {
+    if (event.deltaY < 0) {
+      objects[objectIndex].scale *= 1.1;
+    } else {
+      objects[objectIndex].scale /= 1.1;
+    }
+    handleObjectSelection();
+  }
+};
+
+/**
+ * Handles the press of a key.
+ * @param {*} event
+ */
+const handleKeyDown = (event) => {
+  const objectIndex = getSelectedObjectIndex();
+  if (objectIndex) {
+    switch (event.key) {
+      case "a":
+        objects[objectIndex].rotation[1] += 0.01;
+        break;
+      case "d":
+        objects[objectIndex].rotation[1] -= 0.01;
+        break;
+      case "s":
+        objects[objectIndex].rotation[0] -= 0.01;
+        break;
+      case "w":
+        objects[objectIndex].rotation[0] += 0.01;
+        break;
+      case "ArrowLeft":
+        objects[objectIndex].translation[0] -= 0.01;
+        break;
+      case "ArrowRight":
+        objects[objectIndex].translation[0] += 0.01;
+        break;
+      case "ArrowDown":
+        objects[objectIndex].translation[1] -= 0.01;
+        break;
+      case "ArrowUp":
+        objects[objectIndex].translation[1] += 0.01;
+        break;
+      case "z":
+        objects[objectIndex].translation[2] += 0.01;
+        break;
+      case "x":
+        objects[objectIndex].translation[2] -= 0.01;
+        break;
+    }
+  }
+};
+
+/**
+ * Handles the release of a key.
+ * @param {*} event
+ */
+const handleKeyUp = (event) => {
+  const objectIndex = getSelectedObjectIndex();
+  event.preventDefault();
+  if (objectIndex) {
+    switch (event.key) {
+      case "s":
+      case "w":
+        objects[objectIndex].rotation[0] = 0;
+        break;
+      case "a":
+      case "d":
+        objects[objectIndex].rotation[1] = 0;
+        break;
+    }
+  }
+};
+
+/**
+ * Handles the click of the `Stop Animation` button.
+ * Resets the rotation of the object to 0 in all axis.
+ */
+const handleStopAnimation = () => {
+  const objectIndex = getSelectedObjectIndex();
+  if (objectIndex) {
+    objects[objectIndex].currentRotation[0] = 0;
+    objects[objectIndex].currentRotation[1] = 0;
+    objects[objectIndex].currentRotation[2] = 0;
+    objects[objectIndex].rotation[0] = 0;
+    objects[objectIndex].rotation[1] = 0;
+    objects[objectIndex].rotation[2] = 0;
+  }
+};
+
+/**
+ * Gets the index of the selected object.
+ * @returns the index of the selected object
+ */
+const getSelectedObjectIndex = () => {
+  const selectObjectElement = document.getElementById("select-object");
+  const objectIndex =
+    selectObjectElement.options[selectObjectElement.selectedIndex];
+  return objectIndex.value;
 };
 
 /**
@@ -306,15 +363,9 @@ const handleAddLightSource = () => {
     "light-src-intensity-b"
   ).value;
 
-  sunlightDirection.x = document.getElementById(
-    "light-src-direction-x"
-  ).value
-  sunlightDirection.y = document.getElementById(
-    "light-src-direction-y"
-  ).value
-  sunlightDirection.z = document.getElementById(
-    "light-src-direction-z"
-  ).value
+  sunlightDirection.x = document.getElementById("light-src-direction-x").value;
+  sunlightDirection.y = document.getElementById("light-src-direction-y").value;
+  sunlightDirection.z = document.getElementById("light-src-direction-z").value;
 
   sunlightIntensity.r = document.getElementById(
     "light-src-intensity-sun-r"
@@ -395,7 +446,6 @@ const handleAddModel = async () => {
   const selectModelElement = document.getElementById("select-model");
   const selectedModelValue = selectModelElement.value;
   const modelFilePath = `${MODELS_SRC}/${selectModelElement.value}.obj`; // won't work well on Linux due to path separator
-  console.log(modelFilePath);
   const modelContent = await loadObjResource(modelFilePath);
   const data = parseOBJ(modelContent);
 
@@ -412,8 +462,6 @@ const handleAddModel = async () => {
     configureTexture(object, image);
   };
 
-  console.log(object);
-
   objects.push(object);
   addObjectToObjectsSelector(object);
 };
@@ -424,12 +472,12 @@ const handleAddModel = async () => {
  */
 const handleRemoveObject = () => {
   const selectObjectElement = document.getElementById("select-object");
-  const selectedObjectValue = selectObjectElement.value;
+  const selectedObjectIndex = selectObjectElement.value;
 
-  objects.splice(selectedObjectValue, 1);
+  objects.splice(selectedObjectIndex, 1);
 
   const childToRemove = document.querySelector(
-    `#select-object > option[value='${selectedObjectValue}']`
+    `#select-object > option[value='${selectedObjectIndex}']`
   );
 
   if (childToRemove === null) {
@@ -484,10 +532,8 @@ const handleAddPrimitive = () => {
  * TODO: when values are modified with keys, update values of the input elements
  */
 const handleObjectSelection = () => {
-  const selectObjectElement = document.getElementById("select-object");
-  const selectedObjectValue =
-    selectObjectElement.options[selectObjectElement.selectedIndex].value;
-  const object = objects[selectedObjectValue];
+  const selectedObjectIndex = getSelectedObjectIndex();
+  const object = objects[selectedObjectIndex];
 
   // Scaling
   const scaleInput = document.querySelector("input[id='scale']");
@@ -518,7 +564,6 @@ const handleObjectManipulation = () => {
   const selectObjectElement = document.getElementById("select-object");
   const objectIndex =
     selectObjectElement.options[selectObjectElement.selectedIndex].value;
-  console.log(objects[objectIndex]);
 
   const scale = parseFloat(document.getElementById("scale").value);
   const rotateX = parseFloat(document.getElementById("rotation-x").value);
@@ -527,8 +572,6 @@ const handleObjectManipulation = () => {
   const translateX = parseFloat(document.getElementById("translation-x").value);
   const translateY = parseFloat(document.getElementById("translation-y").value);
   const translateZ = parseFloat(document.getElementById("translation-z").value);
-
-  console.log(rotateX, degToRad(rotateX));
 
   objects[objectIndex].rotation = [0, 0, 0];
   objects[objectIndex].currentRotation = [0, 0, 0];
@@ -702,13 +745,17 @@ const prepareModel = (object) => {
   gl.enableVertexAttribArray(vTexCoord);
   gl.vertexAttribPointer(vTexCoord, 3, gl.FLOAT, false, 0, 0);
 
-   // Send normals to the GPU
-   var nBuffer = gl.createBuffer();
-   gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer);
-   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object.normals), gl.STATIC_DRAW);
-   var vNormData = gl.getAttribLocation(program, "aNormal");
-   gl.vertexAttribPointer(vNormData, 3, gl.FLOAT, gl.TRUE, 0, 0);
-   gl.enableVertexAttribArray(vNormData);
+  // Send normals to the GPU
+  var nBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, nBuffer);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array(object.normals),
+    gl.STATIC_DRAW
+  );
+  var vNormData = gl.getAttribLocation(program, "aNormal");
+  gl.vertexAttribPointer(vNormData, 3, gl.FLOAT, gl.TRUE, 0, 0);
+  gl.enableVertexAttribArray(vNormData);
 
   // Get a pointer for the model viewer
   modelViewMatrix = gl.getUniformLocation(program, "modelViewMatrix");
@@ -755,8 +802,8 @@ const render = () => {
     sunlightDirectionUniformLocation,
     sunlightDirection.x,
     sunlightDirection.y,
-    sunlightDirection.z,
-  )
+    sunlightDirection.z
+  );
   gl.uniform3f(
     sunlightIntensityUniformLocation,
     sunlightIntensity.r,
